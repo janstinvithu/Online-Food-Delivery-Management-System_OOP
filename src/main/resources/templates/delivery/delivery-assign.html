@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Delivery Courier | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('deliveries')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Assign Delivery Courier</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Dispatch fleet riders to active online orders for prompt last-mile fulfillment.
+            </p>
+        </div>
+        <a th:href="@{/deliveries}" class="btn btn-secondary">&larr; Back to Dispatch Board</a>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div th:if="${errorMessage != null or param.error != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage != null ? errorMessage : param.error}">Courier dispatch error occurred.</span>
+    </div>
+
+    <!-- Case: No pending deliveries available -->
+    <div th:if="${delivery == null and #lists.isEmpty(pendingDeliveries)}" class="card-container fade-in" style="text-align: center; padding: 3rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🛵</div>
+        <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">All Deliveries Assigned</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">There are currently no online orders awaiting courier assignment.</p>
+        <a th:href="@{/deliveries}" class="btn btn-primary">Return to Dispatch Board &rarr;</a>
+    </div>
+
+    <!-- Case: Pending delivery found or specified -->
+    <div th:if="${delivery != null or !#lists.isEmpty(pendingDeliveries)}" class="card-container fade-in" style="padding: 2rem;">
+        <form th:action="@{/deliveries/new}" method="post">
+            <div class="form-grid">
+                <!-- If specific delivery is passed -->
+                <div th:if="${delivery != null}" class="form-group full-width">
+                    <label class="form-label">Shipment to Dispatch</label>
+                    <input type="hidden" name="deliveryId" th:value="${delivery.id}">
+                    <div style="background: var(--bg-secondary); padding: 1.15rem 1.35rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                        <strong class="td-strong" style="font-family: var(--font-mono); color: var(--primary);" th:text="${delivery.trackingNumber}">TRK-0001</strong>
+                        <span style="color: var(--text-secondary); margin-left: 0.75rem;" 
+                              th:if="${delivery.onlineOrder != null}"
+                              th:text="'(Order #' + ${delivery.onlineOrder.orderNumber} + ' &bull; ' + ${delivery.onlineOrder.deliveryAddress} + ')'">
+                            Order Info
+                        </span>
+                    </div>
+                </div>
+
+                <!-- If general /deliveries/new was accessed and multiple pending exist -->
+                <div th:if="${delivery == null and !#lists.isEmpty(pendingDeliveries)}" class="form-group full-width">
+                    <label class="form-label">Select Unassigned Delivery *</label>
+                    <select name="deliveryId" class="form-control" required>
+                        <option th:each="pd : ${pendingDeliveries}" th:value="${pd.id}" 
+                                th:text="${pd.trackingNumber} + ' — ' + (${pd.onlineOrder != null} ? ${pd.onlineOrder.deliveryAddress} : 'Online Delivery')"></option>
+                    </select>
+                </div>
+
+                <!-- Courier Selector -->
+                <div class="form-group full-width">
+                    <label class="form-label">Select Available Courier *</label>
+                    <div th:if="${#lists.isEmpty(availableCouriers)}" style="color: var(--accent-rose); font-size: 0.95rem; margin-top: 0.25rem;">
+                        No couriers are currently available. All riders are actively on route.
+                    </div>
+                    <select th:unless="${#lists.isEmpty(availableCouriers)}" name="courierId" class="form-control" required>
+                        <option th:each="c : ${availableCouriers}" th:value="${c.id}" 
+                                th:text="${c.name} + ' — ' + ${c.vehicleType} + ' (' + ${c.vehiclePlateNumber} + ') ★ ' + ${c.rating}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-footer" style="margin-top: 2rem;">
+                <a th:href="@{/deliveries}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" th:disabled="${#lists.isEmpty(availableCouriers)}">
+                    Dispatch &amp; Assign Courier &rarr;
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

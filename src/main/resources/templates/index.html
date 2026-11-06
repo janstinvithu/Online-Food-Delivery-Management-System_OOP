@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('dashboard')}"></div>
+
+<main class="container">
+    <section class="hero-banner">
+        <div class="hero-tag">
+            <span>🇱🇰</span> Enterprise Food Delivery Platform &bull; Sri Lanka
+        </div>
+        <h1 class="hero-title">Online Food Delivery Management System</h1>
+
+        <div style="display: flex; gap: 0.85rem; margin-top: 1.5rem; flex-wrap: wrap;">
+            <a th:href="@{/orders/new}" class="btn btn-primary">+ Place New Order</a>
+            <a th:href="@{/foods/new}" class="btn btn-secondary">+ Add Dish / Beverage</a>
+            <a th:href="@{/customers/new}" class="btn btn-secondary">+ Register Customer</a>
+            <a th:href="@{/deliveries}" class="btn btn-secondary">🛵 Delivery Dispatch Board</a>
+        </div>
+    </section>
+
+    <!-- Operational Metrics in LKR -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Settled Gross Revenue</span>
+                <span>💳</span>
+            </div>
+            <div class="metric-value text-gradient" 
+                 th:text="${@currency.format(grossRevenue)}">LKR 0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Active Orders</span>
+                <span>📦</span>
+            </div>
+            <div class="metric-value" th:text="${totalOrdersCount}">4</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Food Catalog Items</span>
+                <span>🍲</span>
+            </div>
+            <div class="metric-value" th:text="${menuItemsCount}">7</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Registered Customers</span>
+                <span>👥</span>
+            </div>
+            <div class="metric-value" th:text="${customersCount}">4</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Available Couriers</span>
+                <span>🛵</span>
+            </div>
+            <div class="metric-value" style="color: var(--accent-emerald);" th:text="${availableCouriersCount}">2</div>
+        </div>
+    </div>
+
+    <!-- Active Orders Overview with Search & Filter Chips -->
+    <div class="section-header">
+        <h2 class="section-title">📦 Recent Orders &amp; Fulfillment Stream</h2>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <!-- Instant Live Keystroke Search -->
+            <div class="table-search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control live-table-search" placeholder="Quick search orders..." 
+                       data-table-target="#recentOrdersTable">
+            </div>
+            <a th:href="@{/orders}" class="btn btn-secondary btn-sm">View All Orders &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Filter Chips for Recent Orders -->
+    <div class="filter-chips" data-table-target="#recentOrdersTable">
+        <button type="button" class="filter-chip active" data-filter="all">All Channels</button>
+        <button type="button" class="filter-chip" data-filter="online delivery">🛵 Online Delivery</button>
+        <button type="button" class="filter-chip" data-filter="pickup">🥡 Counter Pickup</button>
+        <button type="button" class="filter-chip" data-filter="preparing">⏳ Preparing</button>
+        <button type="button" class="filter-chip" data-filter="ready">⚡ Ready</button>
+        <button type="button" class="filter-chip" data-filter="delivered">✓ Delivered</button>
+    </div>
+
+    <div class="card-container">
+        <div class="table-responsive">
+            <table class="custom-table" id="recentOrdersTable">
+                <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Fulfillment Channel</th>
+                    <th>Line Items</th>
+                    <th>Discount</th>
+                    <th>Final Total (LKR)</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${recentOrders}">
+                    <td class="td-strong">
+                        <span th:text="${order.orderNumber}" th:data-copy="${order.orderNumber}" 
+                              style="font-family: var(--font-mono); color: var(--primary);"
+                              title="Click to copy order number">ORD-20261018-1001</span>
+                    </td>
+                    <td>
+                        <div class="td-strong" th:text="${order.customer.fullName}">Eleanor Fernando</div>
+                        <span th:if="${order.customer.registeredCustomer}" 
+                              class="tier-badge"
+                              th:classappend="'tier-' + ${order.customer.membershipTier}" 
+                              th:text="${order.customer.membershipTier}">PLATINUM</span>
+                        <span th:unless="${order.customer.registeredCustomer}" 
+                              class="tier-badge tier-GUEST">GUEST</span>
+                    </td>
+                    <td th:text="${order.fulfillmentType}">Online Delivery</td>
+                    <td>
+                        <span th:text="${order.orderItems.size()} + ' item(s)'">2 item(s)</span>
+                    </td>
+                    <td>
+                        <span th:if="${order.discountAmount > 0}" style="color: var(--accent-emerald); font-weight: 700;" 
+                              th:text="'- ' + ${@currency.format(order.discountAmount)}">- LKR 345.00</span>
+                        <span th:unless="${order.discountAmount > 0}" style="color: var(--text-muted);">&mdash;</span>
+                    </td>
+                    <td class="td-strong" style="color: var(--primary);" 
+                        th:text="${@currency.format(order.totalAmount)}">LKR 2,305.00</td>
+                    <td>
+                        <span th:class="'status-pill status-' + ${order.orderStatus}" 
+                              th:text="${order.orderStatus}">PREPARING</span>
+                    </td>
+                    <td>
+                        <a th:href="@{'/orders/edit/' + ${order.id}}" class="btn btn-secondary btn-sm">Manage</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

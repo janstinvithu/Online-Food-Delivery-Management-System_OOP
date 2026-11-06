@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Order | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar('orders')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Checkout &amp; Place Food Order</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Select fulfillment channel: Online Delivery (with address &amp; delivery fee) or Pickup Order (with counter slot).
+            </p>
+        </div>
+        <a th:href="${session.userRole == 'CUSTOMER' ? '/orders/my-orders' : '/orders'}" class="btn btn-secondary">
+            &larr; <span th:text="${session.userRole == 'CUSTOMER' ? 'Back to My Orders' : 'Back to Order Logs'}">Back</span>
+        </a>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div th:if="${errorMessage != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Validation error occurred. Please check order details.</span>
+    </div>
+
+    <!-- Active Tier Discount Notice for Logged-In Customers -->
+    <div th:if="${currentCustomer != null and currentCustomer.registeredCustomer}" 
+         style="background: var(--hero-gradient); border: 1px solid var(--hero-border); border-radius: var(--radius-sm); padding: 1.15rem 1.35rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem;">
+        <div>
+            <strong style="color: var(--primary);">⭐ <span th:text="${currentCustomer.membershipTier}">PLATINUM</span> Member Benefit:</strong>
+            <span style="color: var(--text-secondary); margin-left: 0.35rem;">
+                An instant <strong th:text="${#numbers.formatDecimal(currentCustomer.discountRate * 100, 0, 0)} + '% discount'">10% discount</strong> will be automatically applied to your food order items!
+            </span>
+        </div>
+        <span class="tier-badge" th:classappend="'tier-' + ${currentCustomer.membershipTier}"
+              th:text="${currentCustomer.loyaltyPoints} + ' Points Active'">1,200 Points Active</span>
+    </div>
+
+    <!-- Fulfillment Type Switcher -->
+    <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <button type="button" class="btn" 
+                th:classappend="${activeTab == 'pickup' ? 'btn-secondary' : 'btn-primary active'}" 
+                data-tab-target="#onlineOrderPanel">🛵 Online Delivery Order</button>
+        <button type="button" class="btn" 
+                th:classappend="${activeTab == 'pickup' ? 'btn-primary active' : 'btn-secondary'}" 
+                data-tab-target="#pickupOrderPanel">🥡 Pickup Counter Order</button>
+    </div>
+
+    <!-- Panel 1: Online Order -->
+    <div id="onlineOrderPanel" class="tab-panel card-container fade-in" 
+         th:style="${activeTab == 'pickup' ? 'display: none;' : 'display: block;'}">
+        <form th:action="@{/orders/new/online}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="onlineCustSelect">Customer *</label>
+                    <select id="onlineCustSelect" name="customerId" class="form-control" required>
+                        <option value="" disabled th:selected="${selectedCustomerId == null}">-- Select Customer --</option>
+                        <option th:each="c : ${customers}" th:value="${c.id}" 
+                                th:selected="${selectedCustomerId != null and c.id == selectedCustomerId}"
+                                th:text="${c.fullName} + ' (' + ${c.email} + ')'"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="foodSelect">Food Item *</label>
+                    <select name="foodItemId" id="foodSelect" class="form-control" required>
+                        <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
+                        <option th:each="f : ${foodItems}" th:value="${f.id}" 
+                                th:data-price="${f.price}"
+                                th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
+                                th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="quantityInput">Quantity *</label>
+                    <div class="qty-stepper">
+                        <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
+                        <input type="number" name="quantity" id="quantityInput" 
+                               th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
+                        <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deliveryFeeInput">Delivery Fee (LKR) *</label>
+                    <input type="number" step="0.01" min="0.00" name="deliveryFee" id="deliveryFeeInput" class="form-control" 
+                           th:value="${enteredDeliveryFee != null ? enteredDeliveryFee : '350.00'}" required>
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label" for="deliveryAddressInput">Delivery Address (Sri Lanka) *</label>
+                    <input type="text" id="deliveryAddressInput" name="deliveryAddress" class="form-control" required 
+                           minlength="5" maxlength="255"
+                           th:value="${enteredAddress != null ? enteredAddress : (currentCustomer != null ? currentCustomer.address : '')}"
+                           placeholder="e.g. No. 42, Ward Place, Colombo 07">
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label" for="specialInstructionsInput">Special Delivery Instructions</label>
+                    <input type="text" id="specialInstructionsInput" name="specialInstructions" class="form-control" 
+                           maxlength="255" th:value="${enteredInstructions}"
+                           placeholder="e.g. Leave with building security, call upon arrival">
+                </div>
+            </div>
+            <div class="form-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="font-size: 1.15rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>Estimated Total:</span> 
+                    <strong id="orderTotalEstimate" style="color: var(--primary); font-family: var(--font-heading); font-size: 1.35rem;">LKR 0.00</strong>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a th:href="${session.userRole == 'CUSTOMER' ? '/orders/my-orders' : '/orders'}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Submit Delivery Order &rarr;</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Panel 2: Pickup Order -->
+    <div id="pickupOrderPanel" class="tab-panel card-container fade-in" 
+         th:style="${activeTab == 'pickup' ? 'display: block;' : 'display: none;'}">
+        <form th:action="@{/orders/new/pickup}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="pickupCustSelect">Customer *</label>
+                    <select id="pickupCustSelect" name="customerId" class="form-control" required>
+                        <option value="" disabled th:selected="${selectedCustomerId == null}">-- Select Customer --</option>
+                        <option th:each="c : ${customers}" th:value="${c.id}" 
+                                th:selected="${selectedCustomerId != null and c.id == selectedCustomerId}"
+                                th:text="${c.fullName} + ' (' + ${c.email} + ')'"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupFoodSelect">Food Item *</label>
+                    <select id="pickupFoodSelect" name="foodItemId" class="form-control" required>
+                        <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
+                        <option th:each="f : ${foodItems}" th:value="${f.id}" 
+                                th:data-price="${f.price}"
+                                th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
+                                th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupQty">Quantity *</label>
+                    <div class="qty-stepper">
+                        <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
+                        <input type="number" id="pickupQty" name="quantity" 
+                               th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
+                        <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupTimeSlotInput">Pickup Time Slot *</label>
+                    <input type="text" id="pickupTimeSlotInput" name="pickupTimeSlot" class="form-control" required 
+                           minlength="5" maxlength="50" th:value="${enteredPickupTimeSlot}"
+                           placeholder="e.g. 12:45 PM - 01:15 PM">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupWindowInput">Pickup Window (Minutes) *</label>
+                    <input type="number" id="pickupWindowInput" name="pickupWindowMinutes" class="form-control" 
+                           th:value="${enteredPickupWindow != null ? enteredPickupWindow : 15}" min="5" max="120" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupPhoneInput">Pickup Contact Phone *</label>
+                    <input type="tel" id="pickupPhoneInput" name="pickupContactPhone" class="form-control" required 
+                           pattern="^\+?[0-9\s\-]{8,20}$"
+                           title="Enter a valid contact phone number (e.g. +94-77-1234567)"
+                           th:value="${enteredPickupPhone != null ? enteredPickupPhone : (currentCustomer != null ? currentCustomer.phone : '')}"
+                           placeholder="+94 77 123 4567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="counterNumberInput">Counter Number</label>
+                    <input type="number" id="counterNumberInput" name="counterNumber" class="form-control" 
+                           th:value="${enteredCounterNumber != null ? enteredCounterNumber : 1}" min="1" max="50">
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-checkbox">
+                        <input type="checkbox" name="curbsidePickup" value="true" th:checked="${enteredCurbside}">
+                        <span class="form-label" style="margin-bottom: 0;">🚗 Curbside Pickup Requested</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-footer">
+                <a th:href="${session.userRole == 'CUSTOMER' ? '/orders/my-orders' : '/orders'}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Submit Pickup Order &rarr;</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

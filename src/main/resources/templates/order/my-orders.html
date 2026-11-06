@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders &bull; FoodFlow LK</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+    <style>
+        .tier-banner {
+            background: var(--hero-gradient);
+            border: 1px solid var(--hero-border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: var(--shadow-subtle);
+        }
+        .order-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-subtle);
+            transition: var(--transition-normal);
+        }
+        .order-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-card);
+            transform: translateY(-2px);
+        }
+        .order-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .financial-summary {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            font-size: 0.9rem;
+        }
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar('my-orders')}"></div>
+
+<main class="container">
+
+    <!-- Flash notification when new order created -->
+    <div th:if="${createdOrderNumber != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span>Order placed successfully! Order reference: <strong th:text="${createdOrderNumber}">ORD-12345</strong></span>
+    </div>
+
+    <!-- Customer & Membership Tier Header -->
+    <div class="tier-banner fade-in">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                <h1 style="font-size: 1.75rem; margin-bottom: 0; color: var(--text-primary);">
+                    Hello, <span th:text="${customer.fullName}">Eleanor Fernando</span>
+                </h1>
+                <span th:if="${customer.registeredCustomer}" 
+                      class="tier-badge"
+                      th:classappend="'tier-' + ${customer.membershipTier}"
+                      th:text="${customer.membershipTier} + ' TIER'">PLATINUM TIER</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                <span th:if="${customer.registeredCustomer}">
+                    You have <strong style="color: var(--primary);" th:text="${customer.loyaltyPoints}">1200</strong> Loyalty Points &bull; 
+                    Enjoying <strong>10% Member Discount</strong> automatically calculated at checkout.
+                </span>
+                <span th:unless="${customer.registeredCustomer}">
+                    Standard Guest Customer &bull; Register an account to earn points and claim up to 15% discount!
+                </span>
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a th:href="@{/customers/profile}" class="btn btn-secondary">My Profile</a>
+            <a th:href="@{/orders/new}" class="btn btn-primary">+ Place New Order</a>
+        </div>
+    </div>
+
+    <!-- Active Orders Section Header -->
+    <div class="section-header">
+        <div>
+            <h2 class="section-title">Your Order History</h2>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 0;">
+                Real-time tracking, item details, and payment settlement confirmation.
+            </p>
+        </div>
+        <span class="nav-badge" th:text="${orders.size()} + ' Orders Found'">4 Orders Found</span>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${orders.isEmpty()}" class="card-container" style="padding: 4rem 2rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🍽️</div>
+        <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">No Orders Yet</h3>
+        <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 1.5rem auto;">
+            Explore our curated menu of authentic Sri Lankan culinary dishes including Chicken Biryani, Jaffna Kottu, and Ceylon Tea.
+        </p>
+        <a th:href="@{/orders/new}" class="btn btn-primary">Browse Menu &amp; Order Now &rarr;</a>
+    </div>
+
+    <!-- Orders List -->
+    <div th:unless="${orders.isEmpty()}">
+        <div th:each="ord : ${orders}" class="order-card fade-in">
+            <!-- Card Header -->
+            <div class="order-card-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <span class="td-strong" style="font-size: 1.15rem; color: var(--primary); font-family: var(--font-mono); cursor: pointer;" 
+                              th:text="${ord.orderNumber}" th:data-copy="${ord.orderNumber}" title="Click to copy">ORD-20261018-1001</span>
+                        <span th:class="'status-pill status-' + ${ord.orderStatus}" th:text="${ord.orderStatus}">PREPARING</span>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;" 
+                         th:text="'Placed on ' + ${#temporals.format(ord.orderDateTime, 'dd MMM yyyy, hh:mm a')}">
+                        18 Oct 2026, 01:15 PM
+                    </div>
+                </div>
+
+                <!-- Payment Status Action -->
+                <div>
+                    <span th:if="${ord.payment != null and ord.payment.paymentStatus == 'COMPLETED'}" 
+                          class="status-pill status-DELIVERED">
+                        ✓ Paid (<span th:text="${ord.payment.paymentDetails}">Card •••• 4242</span>)
+                    </span>
+                    <a th:if="${ord.payment == null or ord.payment.paymentStatus != 'COMPLETED'}" 
+                       th:href="@{'/payments/checkout/' + ${ord.id}}" class="btn btn-primary btn-sm">
+                        💳 Settle Payment
+                    </a>
+                </div>
+            </div>
+
+            <!-- Fulfillment & Delivery Details -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.25rem;">
+                <div>
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                        Fulfillment Channel
+                    </div>
+                    <div style="font-weight: 600; color: var(--text-primary);" th:text="${ord.fulfillmentType}">
+                        Online Delivery to: No. 42, Ward Place, Colombo 07
+                    </div>
+                </div>
+
+                <div th:if="${ord instanceof T(com.fooddelivery.model.order.OnlineOrder) and ord.delivery != null}">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                        Rider &amp; Tracking
+                    </div>
+                    <div>
+                        <span th:if="${ord.delivery.deliveryPerson != null}" style="font-weight: 600; color: var(--text-primary);">
+                            🛵 <span th:text="${ord.delivery.deliveryPerson.name}">Kasun Bandara</span> 
+                            (<span th:text="${ord.delivery.deliveryPerson.vehicleDetails}">Honda Dio</span>)
+                        </span>
+                        <span th:unless="${ord.delivery.deliveryPerson != null}" style="color: var(--text-secondary);">
+                            ⏳ Courier assignment in progress
+                        </span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+                        Tracking: <span style="font-family: var(--font-mono); color: var(--primary); cursor: pointer;" 
+                                        th:text="${ord.delivery.trackingNumber}" 
+                                        th:data-copy="${ord.delivery.trackingNumber}" title="Click to copy">TRK-COL-2026-0001</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ordered Food Line Items -->
+            <div style="margin-bottom: 1.25rem;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">
+                    Items Ordered
+                </div>
+                <div th:each="item : ${ord.orderItems}" 
+                     style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px dashed var(--border-color); font-size: 0.92rem;">
+                    <div>
+                        <strong th:text="${item.foodItem.name}">Chicken Biryani</strong> 
+                        <span style="color: var(--text-muted);" th:text="' &times; ' + ${item.quantity}"> &times; 1</span>
+                    </div>
+                    <div class="td-strong" th:text="${@currency.format(item.subtotal)}">LKR 1,850.00</div>
+                </div>
+            </div>
+
+            <!-- Financial Summary & Rupee Formatting -->
+            <div class="financial-summary">
+                <div class="financial-row">
+                    <span style="color: var(--text-secondary);">Subtotal Amount</span>
+                    <span style="font-weight: 600;" th:text="${@currency.format(ord.subtotalAmount)}">LKR 1,850.00</span>
+                </div>
+                <div class="financial-row" th:if="${ord.discountAmount != null and ord.discountAmount.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                    <span style="color: var(--accent-emerald); font-weight: 600;">Loyalty Tier Discount Applied</span>
+                    <span style="color: var(--accent-emerald); font-weight: 700;" th:text="'- ' + ${@currency.format(ord.discountAmount)}">- LKR 185.00</span>
+                </div>
+                <div class="financial-row" th:if="${ord instanceof T(com.fooddelivery.model.order.OnlineOrder)}">
+                    <span style="color: var(--text-secondary);">Standard Delivery Fee (Colombo Metropolitan)</span>
+                    <span style="font-weight: 600;" th:text="${@currency.format(ord.deliveryFee)}">LKR 350.00</span>
+                </div>
+                <div class="financial-row" style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; margin-top: 0.25rem;">
+                    <span style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary);">Total Paid / Payable</span>
+                    <span style="font-weight: 800; font-size: 1.3rem; color: var(--primary);" th:text="${@currency.format(ord.totalAmount)}">LKR 2,015.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In &bull; FoodFlow LK</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+    <style>
+        .login-wrapper {
+            min-height: calc(100vh - 160px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+        }
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-elevated);
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-normal);
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+        .role-switch-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.35rem;
+            margin-bottom: 2rem;
+            gap: 0.35rem;
+        }
+        .role-btn {
+            border: none;
+            background: transparent;
+            padding: 0.65rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .role-btn.active {
+            background: var(--bg-card);
+            color: var(--primary);
+            box-shadow: var(--shadow-subtle);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar('login')}"></div>
+
+<main class="login-wrapper">
+    <div class="login-card fade-in">
+        <!-- Logo & Title -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="brand-icon" style="margin: 0 auto 1.25rem auto; width: 50px; height: 50px;">
+                <img th:src="@{/images/logo.svg}" alt="FoodFlow LK" width="28" height="28">
+            </div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.35rem; color: var(--text-primary);">Welcome to FoodFlow LK</h1>
+            <p style="color: var(--text-secondary); font-size: 0.92rem;">
+                Online Food Delivery Management System &bull; Sri Lanka
+            </p>
+        </div>
+
+        <!-- Feedback Alerts -->
+        <div th:if="${error != null}" class="alert-error">
+            <span>⚠️</span>
+            <span th:text="${error}">Invalid credentials. Please try again.</span>
+        </div>
+        <div th:if="${logout}" class="alert-success">
+            <span>✓</span>
+            <span>You have signed out successfully.</span>
+        </div>
+
+        <!-- Role Dual-Toggle Selector -->
+        <div class="role-switch-container">
+            <button type="button" id="tabCustomer" class="role-btn" 
+                    th:classappend="${activeRole != 'ADMIN' ? 'active' : ''}" 
+                    onclick="switchRole('CUSTOMER')">
+                👤 Customer Account
+            </button>
+            <button type="button" id="tabAdmin" class="role-btn" 
+                    th:classappend="${activeRole == 'ADMIN' ? 'active' : ''}" 
+                    onclick="switchRole('ADMIN')">
+                🛡️ Admin Portal
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <form th:action="@{/login}" method="post" id="loginForm">
+            <input type="hidden" name="role" id="roleInput" th:value="${activeRole != null ? activeRole : 'CUSTOMER'}">
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="emailInput">Email Address</label>
+                <input type="email" id="emailInput" name="email" class="form-control" 
+                       placeholder="Enter your email" required autofocus>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" for="passwordInput">Password</label>
+                <input type="password" id="passwordInput" name="password" class="form-control" 
+                       placeholder="••••••••••••" required>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                Sign In as Customer &rarr;
+            </button>
+        </form>
+
+        <!-- Registration Link -->
+        <div style="text-align: center; margin-top: 1.75rem; font-size: 0.88rem; color: var(--text-secondary);">
+            Don't have an account yet? 
+            <a th:href="@{/customers/new}" style="font-weight: 700;">Create Customer Account</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+<script>
+    function switchRole(role) {
+        const tabCustomer = document.getElementById('tabCustomer');
+        const tabAdmin = document.getElementById('tabAdmin');
+        const roleInput = document.getElementById('roleInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const emailInput = document.getElementById('emailInput');
+
+        if (role === 'ADMIN') {
+            tabAdmin.classList.add('active');
+            tabCustomer.classList.remove('active');
+            roleInput.value = 'ADMIN';
+            submitBtn.textContent = 'Sign In to Admin Portal →';
+            emailInput.placeholder = 'admin@foodflow.lk';
+        } else {
+            tabCustomer.classList.add('active');
+            tabAdmin.classList.remove('active');
+            roleInput.value = 'CUSTOMER';
+            submitBtn.textContent = 'Sign In as Customer →';
+            emailInput.placeholder = 'e.g. your.email@domain.lk';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialRole = document.getElementById('roleInput').value;
+        switchRole(initialRole === 'ADMIN' ? 'ADMIN' : 'CUSTOMER');
+    });
+</script>
+
+</body>
+</html>

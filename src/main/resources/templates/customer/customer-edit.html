@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Customer | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('customers')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Update Customer Profile</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;" 
+               th:text="'Modifying details for ' + ${customer.fullName}">
+                Update profile
+            </p>
+        </div>
+        <a th:href="@{/customers}" class="btn btn-secondary">&larr; Back to Customers</a>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div th:if="${errorMessage != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Validation error occurred.</span>
+    </div>
+
+    <div class="card-container fade-in">
+        <form th:action="@{'/customers/edit/' + ${customer.id}}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="editCustName">Full Name *</label>
+                    <input type="text" id="editCustName" name="fullName" th:value="${customer.fullName}" 
+                           class="form-control" required minlength="2" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editCustEmail">Email Address *</label>
+                    <input type="email" id="editCustEmail" name="email" th:value="${customer.email}" 
+                           class="form-control" required maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editCustPhone">Phone Number *</label>
+                    <input type="tel" id="editCustPhone" name="phone" th:value="${customer.phone}" 
+                           class="form-control" required pattern="^\+?[0-9\s\-]{8,20}$"
+                           title="Enter a valid phone number (e.g. +94-77-1234567)">
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label" for="editCustAddress">Delivery Address (Sri Lanka)</label>
+                    <input type="text" id="editCustAddress" name="address" th:value="${customer.address}" 
+                           class="form-control" maxlength="255" placeholder="e.g. No. 42, Ward Place, Colombo 07">
+                </div>
+                <div class="form-group" th:if="${customer.registeredCustomer}">
+                    <label class="form-label" for="editCustPoints">Loyalty Points</label>
+                    <input type="number" id="editCustPoints" name="loyaltyPoints" min="0" max="100000" 
+                           th:value="${customer.loyaltyPoints}" class="form-control">
+                </div>
+            </div>
+            <div class="form-footer">
+                <a th:href="@{/customers}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes &rarr;</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+/* =============================================================================
+   ONLINE FOOD DELIVERY SYSTEM - DESIGN SYSTEM & THEME TOKENS
+   Features: Light & Dark Mode, Micro-animations, Modern Typography, Glassmorphism
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+    /* Light Theme Color Palette */
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #F1F5F9;
+    --bg-surface: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #FFFFFF;
+    --bg-elevated: #FFFFFF;
+    
+    --border-color: #E2E8F0;
+    --border-subtle: #EDF2F7;
+    --border-hover: #CBD5E1;
+    --border-focus: #2563EB;
+
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-light: #EFF6FF;
+    --primary-glow: rgba(37, 99, 235, 0.2);
+    --primary-gradient: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    --primary-gradient-subtle: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+
+    --accent-emerald: #10B981;
+    --accent-emerald-light: #ECFDF5;
+    --accent-amber: #F59E0B;
+    --accent-amber-light: #FEF3C7;
+    --accent-rose: #EF4444;
+    --accent-rose-light: #FEF2F2;
+    --accent-purple: #8B5CF6;
+    --accent-purple-light: #F5F3FF;
+    --accent-cyan: #06B6D4;
+    --accent-cyan-light: #ECFEFF;
+
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --text-inverted: #FFFFFF;
+
+    --hero-gradient: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%);
+    --hero-border: #DBEAFE;
+
+    --glass-bg: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(226, 232, 240, 0.8);
+    --glass-blur: blur(12px);
+
+    --table-header-bg: #F8FAFC;
+    --table-row-hover: #F8FAFC;
+    --input-bg: #FFFFFF;
+
+    --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Outfit', 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'Space Grotesk', monospace, monospace;
+
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
+    --radius-full: 9999px;
+
+    --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-elevated: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+    --shadow-primary: 0 4px 16px 0 rgba(37, 99, 235, 0.28);
+    --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
+
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =============================================================================
+   DARK THEME TOKENS (Sleek Obsidian & Cyber Blue Palette)
+   ============================================================================= */
+[data-theme="dark"] {
+    --bg-primary: #0A0E17;
+    --bg-secondary: #111827;
+    --bg-surface: #161F30;
+    --bg-card: #141C2E;
+    --bg-card-hover: #19243B;
+    --bg-elevated: #1A2438;
+
+    --border-color: #22304A;
+    --border-subtle: #192336;
+    --border-hover: #374A6D;
+    --border-focus: #3B82F6;
+
+    --primary: #3B82F6;
+    --primary-hover: #60A5FA;
+    --primary-light: rgba(59, 130, 246, 0.16);
+    --primary-glow: rgba(59, 130, 246, 0.38);
+    --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    --primary-gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(30, 58, 138, 0.25) 100%);
+
+    --accent-emerald: #10B981;
+    --accent-emerald-light: rgba(16, 185, 129, 0.16);
+    --accent-amber: #F59E0B;
+    --accent-amber-light: rgba(245, 158, 11, 0.16);
+    --accent-rose: #EF4444;
+    --accent-rose-light: rgba(239, 68, 68, 0.16);
+    --accent-purple: #A78BFA;
+    --accent-purple-light: rgba(167, 139, 250, 0.16);
+    --accent-cyan: #22D3EE;
+    --accent-cyan-light: rgba(34, 211, 238, 0.16);
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --text-inverted: #0A0E17;
+
+    --hero-gradient: linear-gradient(135deg, rgba(22, 31, 48, 0.95) 0%, rgba(14, 20, 32, 0.98) 100%);
+    --hero-border: #22304A;
+
+    --glass-bg: rgba(20, 28, 46, 0.85);
+    --glass-border: rgba(34, 48, 74, 0.85);
+    --glass-blur: blur(14px);
+
+    --table-header-bg: #0F1624;
+    --table-row-hover: rgba(59, 130, 246, 0.06);
+    --input-bg: #0F1624;
+
+    --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 4px 12px -2px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-elevated: 0 16px 36px -4px rgba(0, 0, 0, 0.65), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+    --shadow-primary: 0 4px 20px 0 rgba(59, 130, 246, 0.4);
+    --shadow-glow: 0 0 24px rgba(59, 130, 246, 0.25);
+}
+
+/* =============================================================================
+   BASE RESETS & GLOBAL TYPOGRAPHY
+   ============================================================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Sleek Minimalist Scrollbar */
+::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-hover);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+    font-weight: 700;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* Selection Color */
+::selection {
+    background: var(--primary);
+    color: #FFFFFF;
+}
+
+/* =============================================================================
+   KEYFRAME MICRO-ANIMATIONS
+   ============================================================================= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseDot {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+    }
+}
+
+@keyframes pulseDotSuccess {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes pulseDotWarning {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(110%);
+        opacity: 0;
+    }
+}
+
+/* =============================================================================
+   UTILITY CLASSES & MICRO-INTERACTIONS
+   ============================================================================= */
+.fade-in {
+    animation: fadeIn 0.4s var(--transition-smooth) forwards;
+}
+
+.text-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+}
+
+.glow-hover {
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.glow-hover:hover {
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+}

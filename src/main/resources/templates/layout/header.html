@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="header(activeTab)">
+    <div th:replace="~{fragments/navbar :: navbar(${activeTab})}"></div>
+</div>
+</body>
+</html>

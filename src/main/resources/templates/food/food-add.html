@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Food Item | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('foods')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Add Food Item</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Select entity subclass to instantiate: MainCourse (with spiceLevel) or Beverage (with volumeSize).
+            </p>
+        </div>
+        <a th:href="@{/foods}" class="btn btn-secondary">&larr; Back to Catalog</a>
+    </div>
+
+    <!-- Error Banner -->
+    <div th:if="${errorMessage != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Validation error occurred.</span>
+    </div>
+
+    <!-- Subclass Selector Tabs -->
+    <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <button type="button" class="btn" 
+                th:classappend="${activeTab == 'beverage' ? 'btn-secondary' : 'btn-primary active'}" 
+                data-tab-target="#mainCoursePanel">🍲 Add Main Course</button>
+        <button type="button" class="btn" 
+                th:classappend="${activeTab == 'beverage' ? 'btn-primary active' : 'btn-secondary'}" 
+                data-tab-target="#beveragePanel">🥤 Add Beverage</button>
+    </div>
+
+    <!-- Panel 1: Main Course -->
+    <div id="mainCoursePanel" class="tab-panel card-container fade-in" 
+         th:style="${activeTab == 'beverage' ? 'display: none;' : 'display: block;'}">
+        <form th:action="@{/foods/new/main-course}" th:object="${mainCourse}" method="post">
+            <div th:if="${#fields.hasErrors('*')}" class="alert-error" style="margin: 1.5rem 2rem 0 2rem;">
+                <span>⚠️ Please correct the errors in the Main Course form below.</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="mcName">Dish Name *</label>
+                    <input type="text" id="mcName" th:field="*{name}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           required minlength="2" maxlength="100" placeholder="e.g. Chicken Dum Biryani Special">
+                    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mcPrice">Price (LKR) *</label>
+                    <input type="number" id="mcPrice" step="0.01" min="0.01" th:field="*{price}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''"
+                           required placeholder="1850.00">
+                    <span th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mcPrepTime">Preparation Time (Minutes) *</label>
+                    <input type="number" id="mcPrepTime" min="1" max="180" th:field="*{preparationTimeMinutes}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('preparationTimeMinutes')} ? 'is-invalid' : ''"
+                           required placeholder="25">
+                    <span th:if="${#fields.hasErrors('preparationTimeMinutes')}" th:errors="*{preparationTimeMinutes}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mcCuisine">Cuisine Type *</label>
+                    <input type="text" id="mcCuisine" th:field="*{cuisineType}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('cuisineType')} ? 'is-invalid' : ''"
+                           required minlength="2" maxlength="50" placeholder="e.g. Sri Lankan Dum, Northern Sri Lankan">
+                    <span th:if="${#fields.hasErrors('cuisineType')}" th:errors="*{cuisineType}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mcSpice">Spice Level *</label>
+                    <select id="mcSpice" th:field="*{spiceLevel}" class="form-control" 
+                            th:classappend="${#fields.hasErrors('spiceLevel')} ? 'is-invalid' : ''" required>
+                        <option value="MILD">MILD</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HOT">HOT</option>
+                        <option value="EXTRA_HOT">EXTRA HOT</option>
+                    </select>
+                    <span th:if="${#fields.hasErrors('spiceLevel')}" th:errors="*{spiceLevel}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mcPortion">Serving Portion *</label>
+                    <input type="text" id="mcPortion" th:field="*{servingPortion}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('servingPortion')} ? 'is-invalid' : ''"
+                           required minlength="2" maxlength="100" placeholder="e.g. Full Clay Pot with Boiled Egg">
+                    <span th:if="${#fields.hasErrors('servingPortion')}" th:errors="*{servingPortion}" class="form-error"></span>
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label" for="mcDesc">Description</label>
+                    <textarea id="mcDesc" th:field="*{description}" class="form-control" rows="3" 
+                              maxlength="255" placeholder="Traditional culinary ingredients and recipe details..."></textarea>
+                    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" th:field="*{vegetarian}">
+                        <span class="form-label" style="margin-bottom: 0;">🌱 Vegetarian Dish</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-footer">
+                <a th:href="@{/foods}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Main Course &rarr;</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Panel 2: Beverage -->
+    <div id="beveragePanel" class="tab-panel card-container fade-in" 
+         th:style="${activeTab == 'beverage' ? 'display: block;' : 'display: none;'}">
+        <form th:action="@{/foods/new/beverage}" th:object="${beverage}" method="post">
+            <div th:if="${#fields.hasErrors('*')}" class="alert-error" style="margin: 1.5rem 2rem 0 2rem;">
+                <span>⚠️ Please correct the errors in the Beverage form below.</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="bevName">Beverage Name *</label>
+                    <input type="text" id="bevName" th:field="*{name}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           required minlength="2" maxlength="100" placeholder="e.g. Ceylon Nuwara Eliya Pekoe Tea">
+                    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevPrice">Price (LKR) *</label>
+                    <input type="number" id="bevPrice" step="0.01" min="0.01" th:field="*{price}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''"
+                           required placeholder="450.00">
+                    <span th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevPrepTime">Preparation Time (Minutes) *</label>
+                    <input type="number" id="bevPrepTime" min="1" max="60" th:field="*{preparationTimeMinutes}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('preparationTimeMinutes')} ? 'is-invalid' : ''"
+                           required placeholder="5">
+                    <span th:if="${#fields.hasErrors('preparationTimeMinutes')}" th:errors="*{preparationTimeMinutes}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevVolumeSize">Volume Size Label *</label>
+                    <input type="text" id="bevVolumeSize" th:field="*{volumeSize}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('volumeSize')} ? 'is-invalid' : ''"
+                           required minlength="2" maxlength="30" placeholder="e.g. Single Tea Pot (350ml)">
+                    <span th:if="${#fields.hasErrors('volumeSize')}" th:errors="*{volumeSize}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevVolumeMl">Volume (ml) *</label>
+                    <input type="number" id="bevVolumeMl" min="1" max="5000" th:field="*{volumeMl}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('volumeMl')} ? 'is-invalid' : ''"
+                           required placeholder="350">
+                    <span th:if="${#fields.hasErrors('volumeMl')}" th:errors="*{volumeMl}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevSugar">Sugar Level *</label>
+                    <select id="bevSugar" th:field="*{sugarLevel}" class="form-control" 
+                            th:classappend="${#fields.hasErrors('sugarLevel')} ? 'is-invalid' : ''" required>
+                        <option value="ZERO">ZERO SUGAR</option>
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                    </select>
+                    <span th:if="${#fields.hasErrors('sugarLevel')}" th:errors="*{sugarLevel}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bevCaffeine">Caffeine Content (mg)</label>
+                    <input type="number" id="bevCaffeine" min="0" max="1000" th:field="*{caffeineContentMg}" class="form-control" 
+                           th:classappend="${#fields.hasErrors('caffeineContentMg')} ? 'is-invalid' : ''"
+                           placeholder="65">
+                    <span th:if="${#fields.hasErrors('caffeineContentMg')}" th:errors="*{caffeineContentMg}" class="form-error"></span>
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-label" for="bevDesc">Description</label>
+                    <textarea id="bevDesc" th:field="*{description}" class="form-control" rows="3" 
+                              maxlength="255" placeholder="Single-estate tea notes, ingredients..."></textarea>
+                    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="form-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" th:field="*{cold}">
+                        <span class="form-label" style="margin-bottom: 0;">🧊 Served Cold / Chilled</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-footer">
+                <a th:href="@{/foods}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Beverage &rarr;</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Directory | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('customers')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Customer Management Directory</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Polymorphic Single Table Inheritance managing Guest Customers and Registered Member Accounts with dynamic loyalty discounts.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <!-- Live Instant Search -->
+            <div class="table-search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control live-table-search" placeholder="Search name, email, phone..." 
+                       data-table-target="#customerTable">
+            </div>
+            <a th:href="@{/customers/new}" class="btn btn-primary">+ Register Customer</a>
+        </div>
+    </div>
+
+    <!-- Filter Chips for Customer Tiers -->
+    <div class="filter-chips" data-table-target="#customerTable">
+        <button type="button" class="filter-chip active" data-filter="all">All Profiles</button>
+        <button type="button" class="filter-chip" data-filter="platinum">💎 Platinum</button>
+        <button type="button" class="filter-chip" data-filter="gold">🥇 Gold</button>
+        <button type="button" class="filter-chip" data-filter="silver">🥈 Silver</button>
+        <button type="button" class="filter-chip" data-filter="bronze">🥉 Bronze</button>
+        <button type="button" class="filter-chip" data-filter="guest">👤 Guest</button>
+    </div>
+
+    <div class="card-container">
+        <div class="table-responsive">
+            <table class="custom-table" id="customerTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer Name</th>
+                    <th>Contact Info</th>
+                    <th>Delivery Address (Sri Lanka)</th>
+                    <th>Tier / Discount</th>
+                    <th>Loyalty Points</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cust : ${customers}">
+                    <td class="td-strong" th:text="${cust.id}">1</td>
+                    <td class="td-strong" th:text="${cust.fullName}">Eleanor Fernando</td>
+                    <td>
+                        <div th:text="${cust.email}">eleanor@vanguard.lk</div>
+                        <small style="color: var(--text-muted);" th:text="${cust.phone}">+94-77-1234567</small>
+                    </td>
+                    <td th:text="${cust.address != null ? cust.address : 'No address saved'}">No. 42, Ward Place, Colombo 07</td>
+                    <td>
+                        <div th:if="${cust.registeredCustomer}">
+                            <span class="tier-badge"
+                                  th:classappend="'tier-' + ${cust.membershipTier}" 
+                                  th:text="${cust.membershipTier}">PLATINUM</span>
+                            <small style="display: block; color: var(--accent-emerald); font-weight: 700; margin-top: 0.15rem;" 
+                                   th:text="${#numbers.formatDecimal(cust.discountRate * 100, 1, 0)} + '% Off'">15% Off</small>
+                        </div>
+                        <span th:unless="${cust.registeredCustomer}" 
+                              class="tier-badge tier-GUEST">GUEST</span>
+                    </td>
+                    <td>
+                        <span th:if="${cust.registeredCustomer}" class="td-strong" style="color: var(--accent-amber);" 
+                              th:text="${cust.loyaltyPoints} + ' pts'">1200 pts</span>
+                        <span th:unless="${cust.registeredCustomer}" style="color: var(--text-muted);">&mdash;</span>
+                    </td>
+                    <td th:text="${#temporals.format(cust.createdAt, 'yyyy-MM-dd')}">2026-01-10</td>
+                    <td>
+                        <div class="table-actions">
+                            <a th:href="@{'/customers/edit/' + ${cust.id}}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form th:action="@{'/customers/delete/' + ${cust.id}}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Are you sure you want to delete this customer?');">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

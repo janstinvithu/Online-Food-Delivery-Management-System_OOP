@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Profile &amp; Loyalty Rewards &bull; FoodFlow LK</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+    <style>
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 860px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .loyalty-badge-card {
+            background: var(--primary-gradient);
+            color: #FFFFFF;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-primary);
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition-normal);
+        }
+        .loyalty-badge-card:hover {
+            transform: translateY(-2px);
+        }
+        .loyalty-badge-card::after {
+            content: '⭐';
+            position: absolute;
+            right: -15px;
+            bottom: -20px;
+            font-size: 8rem;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar('profile')}"></div>
+
+<main class="container">
+
+    <!-- Flash Alerts -->
+    <div th:if="${updated}" class="alert-success">
+        <span>✓</span>
+        <span>Your profile and delivery preferences have been updated successfully!</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Validation error occurred.</span>
+    </div>
+
+    <!-- Header Section -->
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Customer Account &amp; Loyalty Status</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                Manage your delivery coordinates, contact details, and view your dynamic tier savings.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a th:href="@{/orders/my-orders}" class="btn btn-secondary">&larr; My Orders</a>
+            <a th:href="@{/orders/new}" class="btn btn-primary">+ Order Food</a>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- Left Column: Loyalty & Membership Status -->
+        <div>
+            <div th:if="${customer.registeredCustomer}" class="loyalty-badge-card fade-in">
+                <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9;">
+                    FoodFlow Rewards Program
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0;" 
+                     th:text="${customer.membershipTier} + ' MEMBER'">
+                    PLATINUM MEMBER
+                </div>
+                <div style="font-size: 1.1rem; font-weight: 600; opacity: 0.95; margin-bottom: 1.25rem;">
+                    <span th:text="${customer.loyaltyPoints}">1,200</span> Loyalty Points Accumulated
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-sm); padding: 1rem; backdrop-filter: blur(4px);">
+                    <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">
+                        Active Dynamic Discount
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 800;" 
+                         th:text="${#numbers.formatDecimal(customer.discountRate * 100, 0, 0)} + '% Instant Discount'">
+                        10% Instant Discount
+                    </div>
+                    <div style="font-size: 0.8rem; opacity: 0.9; margin-top: 0.25rem;">
+                        Automatically deducted from food orders at checkout.
+                    </div>
+                </div>
+            </div>
+
+            <div th:unless="${customer.registeredCustomer}" class="card-container fade-in" style="padding: 2rem;">
+                <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">Guest Account</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    You are currently using a standard customer account without points tracking.
+                </p>
+                <div style="background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
+                    <strong style="color: var(--primary);">Upgrade to Registered Membership</strong>
+                    <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0.25rem 0 0 0;">
+                        Earn 1 point per 100 LKR spent, unlock Bronze (0%), Silver (5%), Gold (10%), and Platinum (15%) discounts!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Account Highlights -->
+            <div class="card-container" style="padding: 1.5rem; margin-top: 1.5rem;">
+                <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--text-primary);">Account Summary</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Registered Email</span>
+                        <strong th:text="${customer.email}">eleanor.fernando@vanguard.lk</strong>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Default Preferred Payment</span>
+                        <span th:if="${customer.registeredCustomer}" th:text="${customer.preferredPaymentMethod}">CARD</span>
+                        <span th:unless="${customer.registeredCustomer}">Not specified</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Edit Profile Details Form -->
+        <div class="card-container" style="padding: 2rem;">
+            <h3 style="font-size: 1.3rem; margin-bottom: 0.35rem; color: var(--text-primary);">Personal &amp; Delivery Details</h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 1.75rem;">
+                Ensure your delivery address and phone number are accurate for prompt rider dispatch.
+            </p>
+
+            <form th:action="@{/customers/profile}" method="post">
+                <div class="form-grid" style="padding: 0;">
+                    <div class="form-group">
+                        <label class="form-label" for="fullNameInput">Full Name *</label>
+                        <input type="text" id="fullNameInput" name="fullName" class="form-control" 
+                               th:value="${customer.fullName}" required minlength="2" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="emailDisplay">Email Address (Primary Identity)</label>
+                        <input type="email" id="emailDisplay" class="form-control" 
+                               th:value="${customer.email}" disabled style="background: var(--bg-secondary); color: var(--text-muted);">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phoneInput">Contact Phone Number *</label>
+                        <input type="tel" id="phoneInput" name="phone" class="form-control" 
+                               th:value="${customer.phone}" required pattern="^\+?[0-9\s\-]{8,20}$"
+                               title="Enter a valid contact phone number (e.g. +94-77-1234567)"
+                               placeholder="+94-77-1234567">
+                    </div>
+
+                    <div class="form-group" th:if="${customer.registeredCustomer}">
+                        <label class="form-label" for="paymentSelect">Preferred Payment Method</label>
+                        <select id="paymentSelect" name="preferredPaymentMethod" class="form-control">
+                            <option value="CARD" th:selected="${customer.preferredPaymentMethod == 'CARD'}">Credit / Debit Card (VISA / Master)</option>
+                            <option value="CASH" th:selected="${customer.preferredPaymentMethod == 'CASH'}">Cash on Delivery (LKR)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label" for="addressInput">Standard Delivery Address (Sri Lanka) *</label>
+                        <textarea id="addressInput" name="address" class="form-control" rows="3" 
+                                  th:text="${customer.address}" required minlength="5" maxlength="255"
+                                  placeholder="House/Apartment No, Street, City / Postal Area"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-footer" style="margin-top: 2rem; background: transparent; padding: 1.25rem 0 0 0;">
+                    <a th:href="@{/orders/my-orders}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Profile Updates &rarr;</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt &amp; Settlement | Online Food Delivery System</title>
+    <!-- Early Theme Initializer to Prevent FOUC -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+
+<div th:replace="~{layout/header :: header('orders')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">
+                Payment Receipt &amp; Settlement &bull; <span th:text="${order.orderNumber}">ORD-2026-1001</span>
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Financial settlement confirmation and polymorphic payment audit records (Cash tender/change calculation vs. Card authorization).
+            </p>
+        </div>
+        <a th:href="@{/orders}" class="btn btn-secondary">&larr; Back to Order Logs</a>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div th:if="${errorMessage != null or param.error != null}" class="alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage != null ? errorMessage : param.error}">Payment validation error occurred.</span>
+    </div>
+
+    <!-- Settlement Completed Receipt View -->
+    <div th:if="${payment != null}" class="card-container fade-in" style="padding: 2.5rem; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="display: inline-block; padding: 0.5rem 1.25rem; border-radius: var(--radius-full); background: var(--accent-emerald-light); color: var(--accent-emerald); font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; border: 1px solid rgba(16,185,129,0.3);">
+                ✓ Payment Settled Successfully
+            </div>
+            <div class="td-strong" style="font-size: 2.75rem; color: var(--primary);" 
+                 th:text="${@currency.format(payment.amount)}">LKR 2,550.00</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.35rem; font-family: var(--font-mono);">
+                Reference: <span th:text="${payment.transactionReference}" th:data-copy="${payment.transactionReference}" 
+                                 style="color: var(--text-primary); cursor: pointer;" title="Click to copy">TXN-REF</span>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; font-size: 0.95rem;">
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Customer</span>
+                <div class="td-strong" th:text="${order.customer.fullName}">Name</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;" th:text="${order.customer.email}">email</div>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Settlement Timestamp</span>
+                <div class="td-strong" th:text="${#temporals.format(payment.paymentTimestamp, 'yyyy-MM-dd HH:mm:ss')}">Time</div>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Payment Method &amp; Breakdown</span>
+                <div class="td-strong" th:text="${payment.paymentDetails}">Payment Details</div>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Settlement Status</span>
+                <div style="margin-top: 0.25rem;">
+                    <span class="status-pill status-DELIVERED" th:text="${payment.paymentStatus}">COMPLETED</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 2.5rem; text-align: center; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a th:href="@{'/orders/edit/' + ${order.id}}" class="btn btn-secondary">Review Order</a>
+            <a th:href="@{/orders}" class="btn btn-primary">Return to Order Logs &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Settle Pending Payment View -->
+    <div th:unless="${payment != null}">
+        <div class="card-container fade-in" style="padding: 1.5rem 2rem; margin-bottom: 1.5rem; background: var(--accent-amber-light); border: 1px solid rgba(245, 158, 11, 0.3);">
+            <h3 style="color: var(--accent-amber); margin-bottom: 0.35rem; font-size: 1.25rem;">
+                Payment Pending &bull; Order <span th:text="${order.orderNumber}">ORD</span>
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 0;">
+                Total Due: <strong class="td-strong" style="color: var(--primary); font-size: 1.4rem;" 
+                                   th:text="${@currency.format(order.totalAmount)}">LKR 0.00</strong>
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary active" data-tab-target="#cardPayPanel">💳 Settle with Card</button>
+            <button type="button" class="btn btn-secondary" data-tab-target="#cashPayPanel">💵 Settle with Cash</button>
+        </div>
+
+        <!-- Card Payment Form -->
+        <div id="cardPayPanel" class="tab-panel card-container fade-in" style="padding: 2rem;">
+            <form th:action="@{'/payments/' + ${order.id} + '/card'}" method="post">
+                <div class="form-grid" style="padding: 0;">
+                    <div class="form-group">
+                        <label class="form-label" for="cardTypeSelect">Card Type *</label>
+                        <select id="cardTypeSelect" name="cardType" class="form-control" required>
+                            <option value="VISA">VISA</option>
+                            <option value="MASTERCARD">MASTERCARD</option>
+                            <option value="AMEX">AMERICAN EXPRESS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="cardLastFourInput">Last 4 Digits *</label>
+                        <input type="text" id="cardLastFourInput" name="cardLastFour" class="form-control" 
+                               maxlength="4" minlength="4" pattern="\d{4}" required 
+                               title="Enter exactly 4 numeric digits" placeholder="e.g. 4242">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="authCodeInput">Authorization Code *</label>
+                        <input type="text" id="authCodeInput" name="authorizationCode" class="form-control" 
+                               value="AUTH-LK88219" required minlength="3" maxlength="50" placeholder="e.g. AUTH-LK88219">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="gwTxnIdInput">Gateway Transaction ID *</label>
+                        <input type="text" id="gwTxnIdInput" name="gatewayTransactionId" class="form-control" 
+                               value="gw_lkr_auto9921" required minlength="3" maxlength="50" placeholder="e.g. gw_lkr_auto9921">
+                    </div>
+                </div>
+                <div class="form-footer" style="margin-top: 1.5rem; background: transparent; padding: 1.25rem 0 0 0;">
+                    <a th:href="@{/orders}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Process Card Payment &rarr;</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cash Payment Form -->
+        <div id="cashPayPanel" class="tab-panel card-container fade-in" style="display: none; padding: 2rem;">
+            <form th:action="@{'/payments/' + ${order.id} + '/cash'}" method="post">
+                <div class="form-grid" style="padding: 0;">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="cashTenderedInput">Amount Tendered (LKR) *</label>
+                        <input type="number" step="0.01" name="amountTendered" id="cashTenderedInput" class="form-control" 
+                               th:min="${order.totalAmount}" th:value="${order.totalAmount}" required>
+                        <small style="color: var(--text-muted); display: block; margin-top: 0.35rem;">
+                            Order Total is <span class="td-strong" th:text="${@currency.format(order.totalAmount)}">LKR 0.00</span>. Minimum tender must cover this amount.
+                        </small>
+                    </div>
+                </div>
+                <div class="form-footer" style="margin-top: 1.5rem; background: transparent; padding: 1.25rem 0 0 0;">
+                    <a th:href="@{/orders}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Process Cash Payment &amp; Compute Change &rarr;</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

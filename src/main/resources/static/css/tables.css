@@ -1,0 +1,226 @@
+/* =============================================================================
+   ONLINE FOOD DELIVERY SYSTEM - TABLES, STATUS PILLS & TIER BADGES
+   Features: Pulsing Status Indicators, Glass Rows, Metallic Loyalty Badges
+   ============================================================================= */
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    background: var(--bg-card);
+    transition: background-color var(--transition-normal);
+}
+
+.custom-table th {
+    background: var(--table-header-bg);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.35rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.custom-table td {
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.custom-table tbody tr {
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.custom-table tbody tr:hover {
+    background-color: var(--table-row-hover);
+}
+
+.td-strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* =============================================================================
+   STATUS PILLS WITH ANIMATED PULSE DOTS
+   ============================================================================= */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: fit-content;
+}
+
+.status-pill::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Pending - Pulsing Amber */
+.status-PENDING { 
+    background: var(--accent-amber-light); 
+    color: var(--accent-amber); 
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.status-PENDING::before { 
+    background: var(--accent-amber); 
+    animation: pulseDotWarning 2s infinite;
+}
+
+/* Preparing - Pulsing Purple */
+.status-PREPARING, .status-IN_PREPARATION { 
+    background: var(--accent-purple-light); 
+    color: var(--accent-purple); 
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.status-PREPARING::before, .status-IN_PREPARATION::before { 
+    background: var(--accent-purple); 
+    animation: pulseDot 1.8s infinite;
+}
+
+/* Ready / Confirmed - Pulsing Blue */
+.status-READY, .status-READY_FOR_PICKUP, .status-CONFIRMED { 
+    background: var(--primary-light); 
+    color: var(--primary); 
+    border: 1px solid var(--primary-glow);
+}
+.status-READY::before, .status-READY_FOR_PICKUP::before, .status-CONFIRMED::before { 
+    background: var(--primary); 
+    animation: pulseDot 2s infinite;
+}
+
+/* Out for Delivery - Pulsing Cyan */
+.status-OUT_FOR_DELIVERY { 
+    background: var(--accent-cyan-light); 
+    color: var(--accent-cyan); 
+    border: 1px solid rgba(6, 182, 212, 0.25);
+}
+.status-OUT_FOR_DELIVERY::before { 
+    background: var(--accent-cyan); 
+    animation: pulseDot 1.5s infinite;
+}
+
+/* Delivered / Completed - Steady Emerald */
+.status-DELIVERED, .status-COMPLETED { 
+    background: var(--accent-emerald-light); 
+    color: var(--accent-emerald); 
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.status-DELIVERED::before, .status-COMPLETED::before { 
+    background: var(--accent-emerald); 
+}
+
+/* Cancelled / Failed - Steady Rose */
+.status-CANCELLED, .status-FAILED { 
+    background: var(--accent-rose-light); 
+    color: var(--accent-rose); 
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.status-CANCELLED::before, .status-FAILED::before { 
+    background: var(--accent-rose); 
+}
+
+/* =============================================================================
+   MEMBERSHIP TIER BADGES
+   ============================================================================= */
+.tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.tier-PLATINUM { 
+    background: linear-gradient(135deg, #1E293B, #0F172A); 
+    color: #F8FAFC; 
+    border: 1px solid #475569; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+[data-theme="dark"] .tier-PLATINUM {
+    background: linear-gradient(135deg, #334155, #1E293B);
+    color: #FFFFFF;
+    border-color: #64748B;
+}
+
+.tier-GOLD { 
+    background: #FEF3C7; 
+    color: #B45309; 
+    border: 1px solid #FCD34D; 
+}
+[data-theme="dark"] .tier-GOLD {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FBBF24;
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.tier-SILVER { 
+    background: #F1F5F9; 
+    color: #475569; 
+    border: 1px solid #CBD5E1; 
+}
+[data-theme="dark"] .tier-SILVER {
+    background: rgba(148, 163, 184, 0.15);
+    color: #CBD5E1;
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
+.tier-BRONZE { 
+    background: #FFEDD5; 
+    color: #C2410C; 
+    border: 1px solid #FDBA74; 
+}
+[data-theme="dark"] .tier-BRONZE {
+    background: rgba(194, 65, 12, 0.2);
+    color: #FB923C;
+    border-color: rgba(194, 65, 12, 0.4);
+}
+
+.tier-GUEST { 
+    background: var(--bg-secondary); 
+    color: var(--text-muted); 
+    border: 1px solid var(--border-color); 
+}
+
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+/* Empty State row */
+.table-empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem !important;
+    color: var(--text-muted);
+}
+
+.table-empty-state .empty-icon {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
