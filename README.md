@@ -1,44 +1,77 @@
-# Online Food Delivery Management System (Sri Lanka Edition - LKR)
+# 🇱🇰 Online Food Delivery Management System
+### A Spring Boot Full-Stack Application | Sri Lankan Edition
 
-Production-ready, enterprise-grade Spring Boot 3 & Spring Data JPA full-stack implementation tailored for **IntelliJ IDEA**, configured with a crisp **Light Theme UI** and **Sri Lankan Rupee (LKR)** currency formatting.
-
----
-
-## ⚡ Quick Access & Port Links
-
-The application runs locally on **Port `8080`**. Detailed documentation is available in [PORT_AND_LINKS.md](PORT_AND_LINKS.md).
-
-| Module / Screen | URL Link | Description |
-| :--- | :--- | :--- |
-| **🚀 Main Dashboard** | [http://localhost:8080/](http://localhost:8080/) | Central overview & LKR metrics |
-| **🍲 Food Menu Catalog** | [http://localhost:8080/foods](http://localhost:8080/foods) | Sri Lankan menu & item stock |
-| **➕ Add Food Item** | [http://localhost:8080/foods/new](http://localhost:8080/foods/new) | Create MainCourse or Beverage |
-| **👥 Customer Directory** | [http://localhost:8080/customers](http://localhost:8080/customers) | Loyalty points & member tiers |
-| **📝 Register Customer** | [http://localhost:8080/customers/new](http://localhost:8080/customers/new) | Member account & guest registration |
-| **📦 Order Logs & History** | [http://localhost:8080/orders](http://localhost:8080/orders) | All active & completed orders |
-| **🛵 Place Food Order** | [http://localhost:8080/orders/new](http://localhost:8080/orders/new) | Online Delivery & Counter Pickup checkout |
-| **🛵 Delivery Dispatch Board** | [http://localhost:8080/deliveries](http://localhost:8080/deliveries) | Active courier fleet & tracking |
-| **📍 Assign Courier** | [http://localhost:8080/deliveries/new](http://localhost:8080/deliveries/new) | Dispatch rider to online delivery |
-| **💳 Settle Payment** | [http://localhost:8080/payments/1](http://localhost:8080/payments/1) | Cash tender/change & Card validation |
-| **🗄️ H2 Database Console** | [http://localhost:8080/h2-console](http://localhost:8080/h2-console) | In-memory relational database browser |
+A full-stack food delivery management application developed using **Spring Boot 3, Java, Spring Data JPA, Hibernate, and Thymeleaf**. Designed for IntelliJ IDEA with a clean Light Theme interface and Sri Lankan Rupee (LKR) currency support.
 
 ---
 
-## 🏗️ Architectural Overview & Design Patterns
+## 01. Application Overview
 
-- **Framework**: Spring Boot 3.2.4 on Java 17/21 (LTS).
-- **Persistence**: Spring Data JPA & Hibernate 6 with Relational SQL.
-- **Frontend Layer**: Semantic HTML5, Thymeleaf Template Engine, and Vanilla CSS (Zero external CSS frameworks).
-- **Light Theme Design System**:
-  - Background: Crisp Light Slate (`#F8FAFC`)
-  - Surfaces: Pure White Cards (`#FFFFFF`) with subtle borders (`#E2E8F0`)
-  - Primary Accent: Electric Blue (`#2563EB` / Hover `#1D4ED8`)
-  - Typography: Dark Slate (`#0F172A`) with high legibility (`Inter`, `system-ui`)
-- **Locale & Currency**: Sri Lanka (`LKR` / `Rs. - formatted as "LKR #,##0.00"` via dedicated [`CurrencyUtil`](src/main/java/com/fooddelivery/common/util/CurrencyUtil.java)).
+| Configuration | Details |
+|---|---|
+| Application Type | Full-Stack Web Application |
+| Framework | Spring Boot 3.2.4 |
+| Programming Language | Java 17 / 21 |
+| Persistence Layer | Spring Data JPA |
+| ORM | Hibernate 6 |
+| Frontend | HTML5, Thymeleaf, Vanilla CSS |
+| Database | H2 In-Memory Database |
+| Default Port | `8080` |
+| Currency | Sri Lankan Rupee (LKR) |
+| IDE | IntelliJ IDEA |
+
+### User Interface Design
+
+The application follows a modern, minimal Light Theme design system.
+
+- **Page Background:** Light Slate (`#F8FAFC`)
+- **Content Surfaces:** White (`#FFFFFF`)
+- **Border Color:** Slate (`#E2E8F0`)
+- **Primary Color:** Electric Blue (`#2563EB`)
+- **Hover Color:** Dark Blue (`#1D4ED8`)
+- **Typography:** Inter / system-ui
+- **Text Color:** Dark Slate (`#0F172A`)
+
+### Currency and Regional Formatting
+
+All financial calculations and displayed prices are configured for Sri Lankan Rupees.
+
+- Currency: `LKR`
+- Display format: `LKR #,##0.00`
+- Formatting utility: `CurrencyUtil.java`
+- Location: `src/main/java/com/fooddelivery/common/util/CurrencyUtil.java`
 
 ---
 
-## 🧩 OOP Inheritance & Domain Hierarchy
+## 02. Application Navigation
+
+The application is accessible locally through port `8080`.
+
+For additional information about application links, refer to [PORT_AND_LINKS.md](PORT_AND_LINKS.md).
+
+| Application Feature | Endpoint | Purpose |
+|---|---|---|
+| Main Dashboard | [Open Dashboard](http://localhost:8080/) | Overview and LKR metrics |
+| Food Menu | [View Foods](http://localhost:8080/foods) | Menu catalog and item stock |
+| Add Food | [Create Food Item](http://localhost:8080/foods/new) | Add MainCourse or Beverage |
+| Customer Directory | [View Customers](http://localhost:8080/customers) | Customer records and loyalty tiers |
+| Customer Registration | [Register Customer](http://localhost:8080/customers/new) | Guest and member registration |
+| Order History | [View Orders](http://localhost:8080/orders) | Active and completed orders |
+| Order Checkout | [Place Order](http://localhost:8080/orders/new) | Online delivery and counter pickup |
+| Delivery Management | [View Deliveries](http://localhost:8080/deliveries) | Courier fleet and delivery tracking |
+| Courier Assignment | [Assign Courier](http://localhost:8080/deliveries/new) | Assign a rider to an online order |
+| Payment Settlement | [Payment Details](http://localhost:8080/payments/1) | Cash change and card validation |
+| Database Browser | [H2 Console](http://localhost:8080/h2-console) | Access the in-memory database |
+
+---
+
+## 03. System Architecture and OOP Design
+
+The application is organized into four functional components. Object-oriented programming principles are implemented through inheritance, polymorphism, encapsulation, and object associations.
+
+### Domain Class Structure
+
+The following diagram represents the application's main domain hierarchy and relationships.
 
 ```mermaid
 classDiagram
@@ -49,12 +82,14 @@ classDiagram
         +int preparationTimeMinutes
         +boolean available
     }
+
     class MainCourse {
         +String cuisineType
         +String spiceLevel
         +String servingPortion
         +boolean vegetarian
     }
+
     class Beverage {
         +String volumeSize
         +int volumeMl
@@ -62,6 +97,7 @@ classDiagram
         +int caffeineContentMg
         +boolean cold
     }
+
     FoodItem <|-- MainCourse : Joined Table
     FoodItem <|-- Beverage : Joined Table
 
@@ -71,12 +107,14 @@ classDiagram
         +String phone
         +String address
     }
+
     class RegisteredCustomer {
         +int loyaltyPoints
         +String membershipTier
         +double getDiscountRate()
         +BigDecimal calculateDiscount(subtotal)
     }
+
     Customer <|-- RegisteredCustomer : Single Table
 
     class FoodOrder {
@@ -89,15 +127,18 @@ classDiagram
         +recalculateTotal()
         +cancelOrder()
     }
+
     class OnlineOrder {
         +String deliveryAddress
         +BigDecimal deliveryFee
     }
+
     class PickupOrder {
         +String pickupTimeSlot
         +int counterNumber
         +boolean curbsidePickup
     }
+
     FoodOrder <|-- OnlineOrder : Joined Table
     FoodOrder <|-- PickupOrder : Joined Table
 
@@ -107,15 +148,18 @@ classDiagram
         +String paymentStatus
         +String transactionReference
     }
+
     class CashPayment {
         +BigDecimal amountTendered
         +BigDecimal changeDue
     }
+
     class CardPayment {
         +String cardLastFour
         +String cardType
         +String authorizationCode
     }
+
     Payment <|-- CashPayment : Joined Table
     Payment <|-- CardPayment : Joined Table
 
@@ -126,56 +170,253 @@ classDiagram
     Delivery "many" --> "1" DeliveryPerson : Assigned Courier
 ```
 
-### Module Specifications:
-1. **Component 01 - Food Menu Management**:
-   - JPA Joined Table: `FoodItem` (abstract base) -> `MainCourse` (`spiceLevel`, `servingPortion`, `cuisineType`) and `Beverage` (`volumeSize`, `volumeMl`, `sugarLevel`, `caffeineContentMg`).
-   - Routes: Catalog (`/foods`), Add Item (`/foods/new`), Edit Item (`/foods/edit/{id}`), Delete (`/foods/delete/{id}`).
-2. **Component 02 - Customer Management**:
-   - JPA Single Table: `Customer` (Guest) -> `RegisteredCustomer` (`loyaltyPoints`, dynamic discount tiers: Platinum 15%, Gold 10%, Silver 5%, Bronze 0%).
-   - Routes: Directory (`/customers`), Register (`/customers/new`), Edit Profile (`/customers/edit/{id}`), Delete (`/customers/delete/{id}`).
-3. **Component 03 - Food Order Management**:
-   - JPA Joined Table: `FoodOrder` -> `OnlineOrder` (LKR 350.00 standard delivery fee) and `PickupOrder` (counter slot & curbside flag).
-   - Dynamic Financial Logic: Automatically calculates line subtotals, computes loyalty discounts, adds fulfillment fees, and calculates net totals.
-   - Routes: Checkout (`/orders/new`), Order Logs (`/orders`), Status Management (`/orders/edit/{id}`), Cancellation (`/orders/{id}/cancel`).
-4. **Component 04 - Delivery & Payment Management**:
-   - Associations: OneToOne between `OnlineOrder` and `Delivery`; ManyToOne between `Delivery` and `DeliveryPerson`.
-   - Polymorphic Payments: `CashPayment` (tendered vs change due) and `CardPayment` (4-digit card mask & authorization tokens).
-   - Routes: Dispatch Board (`/deliveries`), Assign Courier (`/deliveries/new` & `/deliveries/assign/{id}`), Settle Payment (`/payments/{orderId}`).
+### Persistence and Inheritance Strategies
+
+| Domain Hierarchy | Inheritance Strategy |
+|---|---|
+| FoodItem → MainCourse, Beverage | Joined Table |
+| Customer → RegisteredCustomer | Single Table |
+| FoodOrder → OnlineOrder, PickupOrder | Joined Table |
+| Payment → CashPayment, CardPayment | Joined Table |
 
 ---
 
-## 🚀 Running the Project in IntelliJ IDEA
+## 04. Functional Components
 
-### 1. Open Project in IntelliJ IDEA
-1. Open IntelliJ IDEA -> `File` -> `Open...` -> Select `c:\Online Food Delivery Management System`.
-2. IntelliJ will detect Maven (`pom.xml`) and auto-import dependencies.
-3. Verify Project SDK is set to **JDK 17 or JDK 21**:
-   - `File` -> `Project Structure...` -> `Project` -> Set SDK to JDK 17+.
+The system is divided into four main modules, each responsible for a specific area of food delivery operations.
 
-### 2. Run the Application
-- Locate `src/main/java/com/fooddelivery/FoodDeliveryApplication.java`.
-- Click the green **Run** triangle or press `Shift + F10`.
-- Alternatively, run via terminal:
-  ```powershell
-  mvn spring-boot:run
-  ```
+### Component 01 — Food Menu Management
 
-### 3. Access Live Application URLs
-- **Main Dashboard**: [http://localhost:8080/](http://localhost:8080/)
-- **Food Menu Catalog**: [http://localhost:8080/foods](http://localhost:8080/foods)
-- **Add Dish / Beverage**: [http://localhost:8080/foods/new](http://localhost:8080/foods/new)
-- **Customer Directory**: [http://localhost:8080/customers](http://localhost:8080/customers)
-- **Register Customer**: [http://localhost:8080/customers/new](http://localhost:8080/customers/new)
-- **Order Logs**: [http://localhost:8080/orders](http://localhost:8080/orders)
-- **Place Food Order**: [http://localhost:8080/orders/new](http://localhost:8080/orders/new)
-- **Delivery Dispatch Board**: [http://localhost:8080/deliveries](http://localhost:8080/deliveries)
-- **Assign Courier**: [http://localhost:8080/deliveries/new](http://localhost:8080/deliveries/new)
-- **H2 Database Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:fooddeliverydb`, User: `sa`, Password: `password`)
+**Purpose:** Manage the food catalog and available menu items.
+
+**Class hierarchy:**
+- `FoodItem` — Abstract base class.
+- `MainCourse` — Represents main food dishes.
+- `Beverage` — Represents drinks and beverages.
+
+**MainCourse attributes:**
+- `cuisineType`
+- `spiceLevel`
+- `servingPortion`
+- `vegetarian`
+
+**Beverage attributes:**
+- `volumeSize`
+- `volumeMl`
+- `sugarLevel`
+- `caffeineContentMg`
+- `cold`
+
+**Available operations:**
+- Display the food catalog.
+- Add new food items.
+- Edit existing items.
+- Delete food items.
+
+**Application routes:**
+
+| Operation | Route |
+|---|---|
+| Catalog | `/foods` |
+| Add Item | `/foods/new` |
+| Edit Item | `/foods/edit/{id}` |
+| Delete Item | `/foods/delete/{id}` |
+
+### Component 02 — Customer Management
+
+**Purpose:** Maintain customer information and membership-related benefits.
+
+**Class hierarchy:**
+- `Customer` — Represents a guest customer.
+- `RegisteredCustomer` — Extends Customer with membership information.
+
+**Registered customer features:**
+- Loyalty point management.
+- Membership tier management.
+- Dynamic discount calculations.
+
+**Membership discount structure:**
+
+| Membership Tier | Discount |
+|---|---:|
+| Platinum | 15% |
+| Gold | 10% |
+| Silver | 5% |
+| Bronze | 0% |
+
+**Available operations:**
+- View customer directory.
+- Register customers.
+- Edit customer profiles.
+- Delete customer records.
+
+**Application routes:**
+
+| Operation | Route |
+|---|---|
+| Directory | `/customers` |
+| Register | `/customers/new` |
+| Edit Profile | `/customers/edit/{id}` |
+| Delete | `/customers/delete/{id}` |
+
+### Component 03 — Food Order Management
+
+**Purpose:** Handle food ordering, checkout, order calculations, and order status management.
+
+**Class hierarchy:**
+- `FoodOrder` — Abstract base order class.
+- `OnlineOrder` — Represents delivery orders.
+- `PickupOrder` — Represents counter pickup orders.
+
+**OnlineOrder features:**
+- Delivery address.
+- Standard delivery fee of LKR 350.00.
+
+**PickupOrder features:**
+- Pickup time slot.
+- Counter number.
+- Curbside pickup option.
+
+**Financial calculation features:**
+- Automatic order line subtotal calculations.
+- Loyalty discount calculations.
+- Fulfillment fee calculations.
+- Automatic net total calculation.
+
+**Available operations:**
+- Place new food orders.
+- View order records.
+- Search and manage orders.
+- Update order status.
+- Cancel orders.
+
+**Application routes:**
+
+| Operation | Route |
+|---|---|
+| Checkout | `/orders/new` |
+| Order Logs | `/orders` |
+| Status Management | `/orders/edit/{id}` |
+| Cancellation | `/orders/{id}/cancel` |
+
+### Component 04 — Delivery and Payment Management
+
+**Purpose:** Coordinate delivery assignments and manage payment transactions.
+
+**Delivery relationships:**
+- OneToOne relationship between `OnlineOrder` and `Delivery`.
+- ManyToOne relationship between `Delivery` and `DeliveryPerson`.
+
+**Payment class hierarchy:**
+- `Payment` — Abstract payment base class.
+- `CashPayment` — Handles cash transactions.
+- `CardPayment` — Handles card transactions.
+
+**Cash payment features:**
+- Amount tendered.
+- Change due calculation.
+
+**Card payment features:**
+- Last four card digits.
+- Card type.
+- Authorization code.
+
+**Available operations:**
+- View the delivery dispatch board.
+- Assign couriers.
+- Manage delivery assignments.
+- Track deliveries.
+- Settle payments.
+
+**Application routes:**
+
+| Operation | Route |
+|---|---|
+| Dispatch Board | `/deliveries` |
+| Assign Courier | `/deliveries/new` |
+| Assign Existing Delivery | `/deliveries/assign/{id}` |
+| Settle Payment | `/payments/{orderId}` |
 
 ---
 
-## 🗄️ Database Scripts & Automated Seeding
+## 05. Installation and Execution Guide
 
-- [`schema.sql`](src/main/resources/db/migration/schema.sql): Complete DDL with primary keys, foreign keys, check constraints, cascading rules, and performance indexes.
-- [`data.sql`](src/main/resources/db/migration/data.sql): Realistic Sri Lankan mock records (Chicken Dum Biryani, Jaffna Mutton Kottu, Ceylon Pekoe Tea, Colombo/Jaffna addresses, and prices in LKR).
-- [`DataInitializer.java`](src/main/java/com/fooddelivery/config/DataInitializer.java): Programmatic safety fallback ensuring sample data is always hydrated.
+Follow these instructions to open and run the project using IntelliJ IDEA.
+
+### Requirements
+
+Before opening the application, make sure the following software is available:
+
+- IntelliJ IDEA
+- JDK 17 or JDK 21
+- Apache Maven
+- Spring Boot 3.2.4 compatible environment
+
+### Step 1 — Import the Project
+
+1. Launch IntelliJ IDEA.
+2. Select **File → Open**.
+3. Select the project directory: `c:\Online Food Delivery Management System`.
+4. Allow IntelliJ IDEA to recognize and import the Maven project.
+5. Wait for Maven dependencies to finish downloading.
+
+### Step 2 — Configure the Java SDK
+
+1. Open **File → Project Structure**.
+2. Select **Project**.
+3. Set the Project SDK to JDK 17 or JDK 21.
+4. Apply the changes.
+
+### Step 3 — Start the Application
+
+Locate the main Spring Boot application class:
+
+`src/main/java/com/fooddelivery/FoodDeliveryApplication.java`
+
+Click the green **Run** icon next to the main method or use:
+
+`Shift + F10`
+
+Alternatively, start the application through the terminal:
+
+```powershell
+mvn spring-boot:run
+```
+
+Once the application starts successfully, it will be available on port `8080`.
+
+### Step 4 — Open the Application
+
+| Feature | Local URL |
+|---|---|
+| Main Dashboard | http://localhost:8080/ |
+| Food Menu Catalog | http://localhost:8080/foods |
+| Add Dish / Beverage | http://localhost:8080/foods/new |
+| Customer Directory | http://localhost:8080/customers |
+| Register Customer | http://localhost:8080/customers/new |
+| Order Logs | http://localhost:8080/orders |
+| Place Food Order | http://localhost:8080/orders/new |
+| Delivery Dispatch Board | http://localhost:8080/deliveries |
+| Assign Courier | http://localhost:8080/deliveries/new |
+| H2 Database Console | http://localhost:8080/h2-console |
+
+---
+
+## 06. Database Access
+
+The application provides an H2 in-memory relational database console for browsing database information.
+
+**H2 Console:** http://localhost:8080/h2-console
+
+Use the following connection details:
+
+| Setting | Value |
+|---|---|
+| JDBC URL | `jdbc:h2:mem:fooddeliverydb` |
+| Username | `sa` |
+| Password | `password` |
+
+---
+
+## 07. Database Scripts and Automated Seeding
+
