@@ -63,3 +63,4 @@ public class OrderSummaryStats {
         return ((double) cancelledOrders / (double) totalOrders) * 100.0;
     }
 }
+

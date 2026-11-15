@@ -1,5 +1,6 @@
 package com.fooddelivery.controller;
 
+import com.fooddelivery.common.exception.ResourceNotFoundException;
 import com.fooddelivery.model.customer.Customer;
 import com.fooddelivery.model.order.FoodOrder;
 import com.fooddelivery.model.order.OnlineOrder;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -41,14 +43,7 @@ public class OrderController {
             return "redirect:/orders/my-orders";
         }
 
-        List<FoodOrder> orders;
-        if (search != null && !search.trim().isEmpty()) {
-            orders = orderService.searchOrders(search.trim());
-        } else if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
-            orders = orderService.getOrdersByStatus(status.trim());
-        } else {
-            orders = orderService.getAllOrders();
-        }
+        List<FoodOrder> orders = orderService.getOrders(status, search);
 
         model.addAttribute("orders", orders);
         model.addAttribute("currentStatus", (status != null && !status.trim().isEmpty()) ? status.trim().toUpperCase() : "ALL");
@@ -78,7 +73,7 @@ public class OrderController {
     @PostMapping("/my-orders/{id}/cancel")
     public String cancelMyOrder(@PathVariable Long id,
                                 HttpSession session,
-                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                RedirectAttributes redirectAttributes) {
         Long customerId = (session != null) ? (Long) session.getAttribute("userId") : null;
         if (customerId == null) {
             return "redirect:/login";
@@ -100,17 +95,25 @@ public class OrderController {
     @GetMapping({"/new", "/create"})
     public String showCreateOrderForm(@RequestParam(value = "tab", defaultValue = "online") String tab,
                                       HttpSession session, Model model) {
-        model.addAttribute("customers", customerService.getAllCustomers());
+        Long customerId = (session != null) ? (Long) session.getAttribute("userId") : null;
+        boolean isCustomer = session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"));
+
+        if (isCustomer && customerId != null) {
+            Customer currentCustomer = customerService.getCustomerById(customerId);
+            model.addAttribute("customers", List.of(currentCustomer));
+            model.addAttribute("currentCustomer", currentCustomer);
+            model.addAttribute("selectedCustomerId", customerId);
+        } else {
+            model.addAttribute("customers", customerService.getAllCustomers());
+            if (customerId != null) {
+                model.addAttribute("currentCustomer", customerService.getCustomerById(customerId));
+                model.addAttribute("selectedCustomerId", customerId);
+            }
+        }
+
         model.addAttribute("foodItems", foodService.getAllActiveFoodItems());
         if (!model.containsAttribute("activeTab")) {
             model.addAttribute("activeTab", tab);
-        }
-
-        Long customerId = (session != null) ? (Long) session.getAttribute("userId") : null;
-        if (customerId != null) {
-            Customer currentCustomer = customerService.getCustomerById(customerId);
-            model.addAttribute("currentCustomer", currentCustomer);
-            model.addAttribute("selectedCustomerId", customerId);
         }
 
         return "order/order-create";
@@ -124,8 +127,26 @@ public class OrderController {
                                     @RequestParam(required = false) Long foodItemId,
                                     @RequestParam(defaultValue = "1") int quantity,
                                     HttpSession session,
+                                    RedirectAttributes redirectAttributes,
                                     Model model) {
+        boolean isCustomer = session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"));
+        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
+
+        if (isCustomer && sessionCustId != null) {
+            customerId = sessionCustId;
+        } else if (customerId == null && sessionCustId != null) {
+            customerId = sessionCustId;
+        }
+
         String cleanAddress = (deliveryAddress != null) ? deliveryAddress.trim() : "";
+        if (cleanAddress.isEmpty() && customerId != null) {
+            try {
+                Customer cust = customerService.getCustomerById(customerId);
+                if (cust.getAddress() != null && !cust.getAddress().trim().isEmpty()) {
+                    cleanAddress = cust.getAddress().trim();
+                }
+            } catch (ResourceNotFoundException ignored) {}
+        }
 
         if (customerId == null) {
             return returnOrderError(model, session, "online", "Please select a customer for the delivery order.",
@@ -153,11 +174,14 @@ public class OrderController {
             items.put(foodItemId, quantity);
             OnlineOrder order = orderService.createOnlineOrder(customerId, cleanAddress, specialInstructions, deliveryFee, items);
 
-            if (session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"))) {
+            if (isCustomer) {
+                redirectAttributes.addFlashAttribute("createdOrderNumber", order.getOrderNumber());
+                redirectAttributes.addFlashAttribute("successMessage", "Order #" + order.getOrderNumber() + " placed successfully! Please settle payment.");
                 return "redirect:/payments/checkout/" + order.getId();
             }
+            redirectAttributes.addFlashAttribute("successMessage", "Online order #" + order.getOrderNumber() + " created successfully.");
             return "redirect:/orders";
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             return returnOrderError(model, session, "online", ex.getMessage(),
                     customerId, foodItemId, quantity, cleanAddress, specialInstructions, deliveryFee);
         }
@@ -165,7 +189,20 @@ public class OrderController {
 
     private String returnOrderError(Model model, HttpSession session, String tab, String errorMsg,
                                     Long custId, Long foodId, int qty, String addr, String instr, BigDecimal fee) {
-        model.addAttribute("customers", customerService.getAllCustomers());
+        boolean isCustomer = session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"));
+        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
+
+        if (isCustomer && sessionCustId != null) {
+            Customer current = customerService.getCustomerById(sessionCustId);
+            model.addAttribute("customers", List.of(current));
+            model.addAttribute("currentCustomer", current);
+        } else {
+            model.addAttribute("customers", customerService.getAllCustomers());
+            if (sessionCustId != null) {
+                model.addAttribute("currentCustomer", customerService.getCustomerById(sessionCustId));
+            }
+        }
+
         model.addAttribute("foodItems", foodService.getAllActiveFoodItems());
         model.addAttribute("activeTab", tab);
         model.addAttribute("errorMessage", errorMsg);
@@ -176,10 +213,6 @@ public class OrderController {
         model.addAttribute("enteredInstructions", instr);
         model.addAttribute("enteredDeliveryFee", fee);
 
-        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
-        if (sessionCustId != null) {
-            model.addAttribute("currentCustomer", customerService.getCustomerById(sessionCustId));
-        }
         return "order/order-create";
     }
 
@@ -193,9 +226,28 @@ public class OrderController {
                                     @RequestParam(required = false) Long foodItemId,
                                     @RequestParam(defaultValue = "1") int quantity,
                                     HttpSession session,
+                                    RedirectAttributes redirectAttributes,
                                     Model model) {
+        boolean isCustomer = session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"));
+        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
+
+        if (isCustomer && sessionCustId != null) {
+            customerId = sessionCustId;
+        } else if (customerId == null && sessionCustId != null) {
+            customerId = sessionCustId;
+        }
+
         String cleanSlot = (pickupTimeSlot != null) ? pickupTimeSlot.trim() : "";
         String cleanPhone = (pickupContactPhone != null) ? pickupContactPhone.trim() : "";
+
+        if (cleanPhone.isEmpty() && customerId != null) {
+            try {
+                Customer cust = customerService.getCustomerById(customerId);
+                if (cust.getPhone() != null && !cust.getPhone().trim().isEmpty()) {
+                    cleanPhone = cust.getPhone().trim();
+                }
+            } catch (ResourceNotFoundException ignored) {}
+        }
 
         if (customerId == null) {
             return returnPickupError(model, session, "Please select a customer for the pickup order.",
@@ -232,11 +284,14 @@ public class OrderController {
             PickupOrder order = orderService.createPickupOrder(customerId, cleanSlot, pickupWindowMinutes, counterNumber,
                     cleanPhone, curbsidePickup, items);
 
-            if (session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"))) {
+            if (isCustomer) {
+                redirectAttributes.addFlashAttribute("createdOrderNumber", order.getOrderNumber());
+                redirectAttributes.addFlashAttribute("successMessage", "Pickup order #" + order.getOrderNumber() + " placed successfully! Please settle payment.");
                 return "redirect:/payments/checkout/" + order.getId();
             }
+            redirectAttributes.addFlashAttribute("successMessage", "Pickup order #" + order.getOrderNumber() + " created successfully.");
             return "redirect:/orders";
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             return returnPickupError(model, session, ex.getMessage(),
                     customerId, foodItemId, quantity, cleanSlot, pickupWindowMinutes, counterNumber, cleanPhone, curbsidePickup);
         }
@@ -245,7 +300,20 @@ public class OrderController {
     private String returnPickupError(Model model, HttpSession session, String errorMsg,
                                      Long custId, Long foodId, int qty, String slot, int window,
                                      int counter, String phone, boolean curbside) {
-        model.addAttribute("customers", customerService.getAllCustomers());
+        boolean isCustomer = session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"));
+        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
+
+        if (isCustomer && sessionCustId != null) {
+            Customer current = customerService.getCustomerById(sessionCustId);
+            model.addAttribute("customers", List.of(current));
+            model.addAttribute("currentCustomer", current);
+        } else {
+            model.addAttribute("customers", customerService.getAllCustomers());
+            if (sessionCustId != null) {
+                model.addAttribute("currentCustomer", customerService.getCustomerById(sessionCustId));
+            }
+        }
+
         model.addAttribute("foodItems", foodService.getAllActiveFoodItems());
         model.addAttribute("activeTab", "pickup");
         model.addAttribute("errorMessage", errorMsg);
@@ -258,10 +326,6 @@ public class OrderController {
         model.addAttribute("enteredPickupPhone", phone);
         model.addAttribute("enteredCurbside", curbside);
 
-        Long sessionCustId = (session != null) ? (Long) session.getAttribute("userId") : null;
-        if (sessionCustId != null) {
-            model.addAttribute("currentCustomer", customerService.getCustomerById(sessionCustId));
-        }
         return "order/order-create";
     }
 
@@ -271,6 +335,7 @@ public class OrderController {
                                   Model model) {
         FoodOrder order = orderService.getOrderById(id);
         model.addAttribute("order", order);
+        model.addAttribute("foodItems", foodService.getAllActiveFoodItems());
         if (error != null && !model.containsAttribute("errorMessage")) {
             model.addAttribute("errorMessage", error);
         }
@@ -279,9 +344,10 @@ public class OrderController {
 
     @PostMapping({"/edit/{id}", "/{id}/status"})
     public String updateOrderStatus(@PathVariable Long id, @RequestParam String status,
-                                    org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                    RedirectAttributes redirectAttributes) {
         try {
             orderService.updateOrderStatus(id, status);
+            redirectAttributes.addFlashAttribute("successMessage", "Order #" + id + " status successfully updated to " + status + ".");
             return "redirect:/orders/edit/" + id;
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -291,13 +357,69 @@ public class OrderController {
 
     @PostMapping("/{id}/cancel")
     public String cancelOrder(@PathVariable Long id,
-                              org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
+        String userRole = (session != null) ? (String) session.getAttribute("userRole") : null;
+        Long sessionUserId = (session != null) ? (Long) session.getAttribute("userId") : null;
+
         try {
+            FoodOrder order = orderService.getOrderById(id);
+            if (!"ADMIN".equalsIgnoreCase(userRole)) {
+                if (sessionUserId == null || !order.getCustomer().getId().equals(sessionUserId)) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Access Denied: You do not have permission to cancel this order.");
+                    return "redirect:/orders/my-orders";
+                }
+            }
             orderService.cancelOrder(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Order #" + order.getOrderNumber() + " was successfully cancelled.");
+            if ("CUSTOMER".equalsIgnoreCase(userRole)) {
+                return "redirect:/orders/my-orders";
+            }
             return "redirect:/orders";
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             return "redirect:/orders/edit/" + id;
         }
+    }
+
+    @PostMapping("/{id}/items/add")
+    public String addOrderItem(@PathVariable Long id,
+                               @RequestParam Long foodItemId,
+                               @RequestParam(defaultValue = "1") int quantity,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            orderService.addOrderItem(id, foodItemId, quantity);
+            redirectAttributes.addFlashAttribute("successMessage", "Food item successfully added to order.");
+        } catch (IllegalArgumentException | IllegalStateException | ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/orders/edit/" + id;
+    }
+
+    @PostMapping("/{id}/items/{itemId}/remove")
+    public String removeOrderItem(@PathVariable Long id,
+                                  @PathVariable Long itemId,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            orderService.removeOrderItem(id, itemId);
+            redirectAttributes.addFlashAttribute("successMessage", "Item removed from order.");
+        } catch (IllegalArgumentException | IllegalStateException | ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/orders/edit/" + id;
+    }
+
+    @PostMapping("/{id}/items/{itemId}/quantity")
+    public String updateOrderItemQuantity(@PathVariable Long id,
+                                          @PathVariable Long itemId,
+                                          @RequestParam int quantity,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            orderService.updateOrderItemQuantity(id, itemId, quantity);
+            redirectAttributes.addFlashAttribute("successMessage", "Item quantity updated.");
+        } catch (IllegalArgumentException | IllegalStateException | ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/orders/edit/" + id;
     }
 }

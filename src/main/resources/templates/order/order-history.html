@@ -33,6 +33,16 @@
         <a th:href="@{/orders/new}" class="btn btn-primary">+ Place New Order</a>
     </div>
 
+    <!-- Flash Alert Banners -->
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Operation succeeded!</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">An error occurred.</span>
+    </div>
+
     <!-- Analytics KPI Row -->
     <div th:if="${stats != null}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
         <div class="card-container" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
@@ -57,30 +67,31 @@
     <div class="card-container" style="padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
         <!-- Status Filter Tabs -->
         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-            <a th:href="@{/orders(status='ALL')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='ALL', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'ALL'} ? 'btn-primary' : 'btn-secondary'">All</a>
-            <a th:href="@{/orders(status='PENDING')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='PENDING', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'PENDING'} ? 'btn-primary' : 'btn-secondary'">Pending</a>
-            <a th:href="@{/orders(status='CONFIRMED')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='CONFIRMED', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'CONFIRMED'} ? 'btn-primary' : 'btn-secondary'">Confirmed</a>
-            <a th:href="@{/orders(status='PREPARING')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='PREPARING', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'PREPARING'} ? 'btn-primary' : 'btn-secondary'">Preparing</a>
-            <a th:href="@{/orders(status='READY')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='READY', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'READY'} ? 'btn-primary' : 'btn-secondary'">Ready</a>
-            <a th:href="@{/orders(status='OUT_FOR_DELIVERY')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='OUT_FOR_DELIVERY', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'OUT_FOR_DELIVERY'} ? 'btn-primary' : 'btn-secondary'">Out for Delivery</a>
-            <a th:href="@{/orders(status='DELIVERED')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='DELIVERED', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'DELIVERED'} ? 'btn-primary' : 'btn-secondary'">Delivered</a>
-            <a th:href="@{/orders(status='CANCELLED')}" class="btn btn-sm" 
+            <a th:href="@{/orders(status='CANCELLED', search=${searchQuery})}" class="btn btn-sm" 
                th:classappend="${currentStatus == 'CANCELLED'} ? 'btn-primary' : 'btn-secondary'">Cancelled</a>
         </div>
 
         <!-- Search Form -->
         <form th:action="@{/orders}" method="get" style="display: flex; gap: 0.5rem; align-items: center; flex: 1; max-width: 380px;">
+            <input type="hidden" name="status" th:value="${currentStatus}" />
             <input type="text" name="search" th:value="${searchQuery}" placeholder="Search order #, customer, phone..." 
                    class="form-control" style="font-size: 0.88rem; padding: 0.45rem 0.85rem;" />
             <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Search</button>
-            <a th:if="${searchQuery != null and !searchQuery.isEmpty()}" th:href="@{/orders}" class="btn btn-secondary btn-sm" title="Clear Search">&times;</a>
+            <a th:if="${searchQuery != null and !searchQuery.isEmpty()}" th:href="@{/orders(status=${currentStatus})}" class="btn btn-secondary btn-sm" title="Clear Search">&times;</a>
         </form>
     </div>
 

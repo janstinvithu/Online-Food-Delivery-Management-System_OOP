@@ -36,6 +36,17 @@ public interface FoodOrderRepository extends JpaRepository<FoodOrder, Long> {
     List<FoodOrder> searchOrdersWithDetails(@Param("keyword") String keyword);
 
     @Query("SELECT DISTINCT o FROM FoodOrder o " +
+           "JOIN FETCH o.customer c " +
+           "LEFT JOIN FETCH o.orderItems oi " +
+           "LEFT JOIN FETCH oi.foodItem " +
+           "WHERE UPPER(o.orderStatus) = UPPER(:status) " +
+           "  AND (LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "       OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "       OR LOWER(c.phone) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY o.orderDateTime DESC")
+    List<FoodOrder> searchOrdersByStatusWithDetails(@Param("status") String status, @Param("keyword") String keyword);
+
+    @Query("SELECT DISTINCT o FROM FoodOrder o " +
            "JOIN FETCH o.customer " +
            "LEFT JOIN FETCH o.orderItems oi " +
            "LEFT JOIN FETCH oi.foodItem " +

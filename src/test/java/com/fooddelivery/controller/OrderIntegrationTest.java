@@ -154,6 +154,45 @@ public class OrderIntegrationTest {
                         .session(createAdminSession())
                         .param("status", "CONFIRMED"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/orders/edit/1"));
+                .andExpect(redirectedUrl("/orders/edit/1"))
+                .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    @Test
+    @DisplayName("Customer placing online order is redirected to payment checkout")
+    void testCustomerCreateOnlineOrderRedirectsToCheckout() throws Exception {
+        mockMvc.perform(post("/orders/new/online")
+                        .session(createCustomerSession())
+                        .param("foodItemId", "1")
+                        .param("quantity", "1")
+                        .param("deliveryAddress", "No 42, Ward Place, Colombo 07")
+                        .param("deliveryFee", "350.00"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/payments/checkout/*"))
+                .andExpect(flash().attributeExists("createdOrderNumber", "successMessage"));
+    }
+
+    @Test
+    @DisplayName("Admin can add food item to an active pending order")
+    void testAdminAddOrderItem() throws Exception {
+        mockMvc.perform(post("/orders/1/items/add")
+                        .session(createAdminSession())
+                        .param("foodItemId", "2")
+                        .param("quantity", "1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/orders/edit/1"))
+                .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    @Test
+    @DisplayName("Customer cannot cancel an order that belongs to another customer")
+    void testUnauthorizedCustomerCannotCancelOtherCustomerOrder() throws Exception {
+        // Order 2 belongs to Kasun Jayawardena (id 2), customer session is Eleanor (id 1)
+        mockMvc.perform(post("/orders/my-orders/2/cancel")
+                        .session(createCustomerSession()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/orders/my-orders"))
+                .andExpect(flash().attributeExists("errorMessage"));
     }
 }
+

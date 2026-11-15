@@ -103,8 +103,14 @@ public abstract class FoodOrder {
             throw new IllegalArgumentException("Order status cannot be blank");
         }
         OrderStatus newStatus = OrderStatus.fromString(orderStatus);
+        if (newStatus.name().equalsIgnoreCase(this.orderStatus)) {
+            return;
+        }
         if (isTerminal()) {
             throw new IllegalStateException("Order is in a terminal state (" + this.orderStatus + ") and cannot be modified.");
+        }
+        if (newStatus == OrderStatus.OUT_FOR_DELIVERY && isPickupOrder()) {
+            throw new IllegalArgumentException("Pickup orders cannot be set to OUT_FOR_DELIVERY. Customers collect orders directly at the counter.");
         }
         this.orderStatus = newStatus.name();
     }

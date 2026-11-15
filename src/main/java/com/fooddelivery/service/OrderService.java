@@ -2,6 +2,7 @@ package com.fooddelivery.service;
 
 import com.fooddelivery.common.exception.ResourceNotFoundException;
 import com.fooddelivery.model.customer.Customer;
+import com.fooddelivery.model.customer.RegisteredCustomer;
 import com.fooddelivery.model.delivery.CashPayment;
 import com.fooddelivery.model.delivery.Delivery;
 import com.fooddelivery.model.delivery.Payment;
@@ -57,6 +58,21 @@ public class OrderService {
             return getAllOrders();
         }
         return foodOrderRepository.searchOrdersWithDetails(keyword.trim());
+    }
+
+    public List<FoodOrder> getOrders(String status, String keyword) {
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim());
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+
+        if (hasStatus && hasKeyword) {
+            return foodOrderRepository.searchOrdersByStatusWithDetails(status.trim(), keyword.trim());
+        } else if (hasStatus) {
+            return foodOrderRepository.findByOrderStatusWithDetails(status.trim());
+        } else if (hasKeyword) {
+            return foodOrderRepository.searchOrdersWithDetails(keyword.trim());
+        } else {
+            return foodOrderRepository.findAllWithDetails();
+        }
     }
 
     public List<FoodOrder> getActiveOrders() {
@@ -145,6 +161,18 @@ public class OrderService {
     public FoodOrder updateOrderStatus(Long orderId, String newStatus) {
         FoodOrder order = getOrderById(orderId);
         order.setOrderStatus(newStatus);
+        if ("DELIVERED".equalsIgnoreCase(newStatus)) {
+            if (order instanceof OnlineOrder onlineOrder && onlineOrder.getDelivery() != null) {
+                onlineOrder.getDelivery().markDelivered();
+            }
+            if (order.getCustomer() instanceof RegisteredCustomer registered) {
+                int pointsEarned = order.getTotalAmount().divideToIntegralValue(new BigDecimal("100")).intValue();
+                if (pointsEarned > 0) {
+                    registered.addLoyaltyPoints(pointsEarned);
+                    customerRepository.save(registered);
+                }
+            }
+        }
         return foodOrderRepository.save(order);
     }
 
@@ -216,6 +244,9 @@ public class OrderService {
     @Transactional
     public Payment attachCashPayment(Long orderId, BigDecimal amountTendered) {
         FoodOrder order = getOrderById(orderId);
+        if (order.isTerminal()) {
+            throw new IllegalStateException("Cannot attach payment to an order in terminal state (" + order.getOrderStatus() + ")");
+        }
         CashPayment cash = new CashPayment(order, order.getTotalAmount(), amountTendered);
         cash.setPaymentStatus("COMPLETED");
         if ("PENDING".equals(order.getOrderStatus())) {

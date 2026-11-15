@@ -378,6 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const deliveryFeeInput = document.getElementById('deliveryFeeInput');
     const totalDisplay = document.getElementById('orderTotalEstimate');
 
+    const pickupFoodSelect = document.getElementById('pickupFoodSelect');
+    const pickupQty = document.getElementById('pickupQty');
+    const pickupTotalDisplay = document.getElementById('pickupTotalEstimate');
+
     function formatLKR(amount) {
         return 'LKR ' + Number(amount || 0).toLocaleString('en-US', {
             minimumFractionDigits: 2,
@@ -398,6 +402,17 @@ document.addEventListener('DOMContentLoaded', () => {
         totalDisplay.textContent = formatLKR(total);
     }
 
+    function updatePickupEstimate() {
+        if (!pickupFoodSelect || !pickupQty || !pickupTotalDisplay) return;
+        const selectedOption = pickupFoodSelect.options[pickupFoodSelect.selectedIndex];
+        if (!selectedOption) return;
+
+        const price = parseFloat(selectedOption.getAttribute('data-price') || '0');
+        const qty = parseInt(pickupQty.value || '1', 10);
+        const total = price * qty;
+        pickupTotalDisplay.textContent = formatLKR(total);
+    }
+
     if (foodSelect && quantityInput) {
         foodSelect.addEventListener('change', updateOrderEstimate);
         quantityInput.addEventListener('input', updateOrderEstimate);
@@ -405,5 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
             deliveryFeeInput.addEventListener('input', updateOrderEstimate);
         }
         updateOrderEstimate();
+    }
+
+    if (pickupFoodSelect && pickupQty) {
+        pickupFoodSelect.addEventListener('change', updatePickupEstimate);
+        pickupQty.addEventListener('input', updatePickupEstimate);
+        updatePickupEstimate();
     }
 });

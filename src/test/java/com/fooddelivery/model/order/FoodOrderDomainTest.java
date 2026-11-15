@@ -150,3 +150,4 @@ public class FoodOrderDomainTest {
         assertThrows(IllegalArgumentException.class, () -> OrderStatus.fromString("INVALID_STATUS"));
     }
 }
+

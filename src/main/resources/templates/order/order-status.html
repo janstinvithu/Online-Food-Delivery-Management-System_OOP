@@ -39,8 +39,14 @@
         <a th:href="@{/orders}" class="btn btn-secondary">&larr; Back to Order Logs</a>
     </div>
 
+    <!-- Success Alert Banner -->
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Status updated successfully!</span>
+    </div>
+
     <!-- Error Alert Banner -->
-    <div th:if="${errorMessage != null or param.error != null}" class="alert-error">
+    <div th:if="${errorMessage != null or param.error != null}" class="alert-error" style="margin-bottom: 1.5rem;">
         <span>⚠️</span>
         <span th:text="${errorMessage != null ? errorMessage : param.error}">Status transition error occurred.</span>
     </div>
@@ -77,7 +83,7 @@
                         <option value="CONFIRMED" th:selected="${order.orderStatus == 'CONFIRMED'}">CONFIRMED</option>
                         <option value="PREPARING" th:selected="${order.orderStatus == 'PREPARING'}">PREPARING</option>
                         <option value="READY" th:selected="${order.orderStatus == 'READY'}">READY</option>
-                        <option value="OUT_FOR_DELIVERY" th:selected="${order.orderStatus == 'OUT_FOR_DELIVERY'}">OUT_FOR_DELIVERY</option>
+                        <option th:if="${order.onlineOrder}" value="OUT_FOR_DELIVERY" th:selected="${order.orderStatus == 'OUT_FOR_DELIVERY'}">OUT_FOR_DELIVERY</option>
                         <option value="DELIVERED" th:selected="${order.orderStatus == 'DELIVERED'}">DELIVERED</option>
                     </select>
                 </div>
@@ -87,7 +93,7 @@
                 </button>
             </form>
 
-            <form th:if="${order.orderStatus != 'DELIVERED' and order.orderStatus != 'CANCELLED'}" 
+            <form th:if="${order.cancellable}" 
                   th:action="@{'/orders/' + ${order.id} + '/cancel'}" method="post"
                   onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be reversed.');">
                 <button type="submit" class="btn btn-danger" style="height: 44px;">Cancel Order</button>
@@ -129,6 +135,7 @@
                 <th>Unit Price</th>
                 <th>Quantity</th>
                 <th>Subtotal</th>
+                <th th:if="${order.orderStatus == 'PENDING'}">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -140,9 +147,37 @@
                 <td th:text="${@currency.format(item.unitPrice)}">LKR 0.00</td>
                 <td class="td-strong" th:text="${item.quantity}">1</td>
                 <td class="td-strong" style="color: var(--primary);" th:text="${@currency.format(item.subtotal)}">LKR 0.00</td>
+                <td th:if="${order.orderStatus == 'PENDING'}">
+                    <form th:if="${#lists.size(order.orderItems) > 1}" 
+                          th:action="@{'/orders/' + ${order.id} + '/items/' + ${item.id} + '/remove'}" method="post" 
+                          style="display:inline;" onsubmit="return confirm('Remove this line item?');">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="color: #EF4444;">&times; Remove</button>
+                    </form>
+                    <span th:unless="${#lists.size(order.orderItems) > 1}" style="font-size: 0.78rem; color: var(--text-muted);">Required (Min 1)</span>
+                </td>
             </tr>
             </tbody>
         </table>
+
+        <!-- Add Item Form for Pending Orders -->
+        <div th:if="${order.orderStatus == 'PENDING' and foodItems != null}" 
+             style="background: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-top: 1.5rem;">
+            <h4 style="font-size: 0.92rem; margin-bottom: 0.75rem; color: var(--text-primary);">+ Add Additional Item to Order</h4>
+            <form th:action="@{'/orders/' + ${order.id} + '/items/add'}" method="post" style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 2; min-width: 220px; margin-bottom: 0;">
+                    <label class="form-label">Dish / Beverage</label>
+                    <select name="foodItemId" class="form-control" required>
+                        <option value="" disabled selected>-- Select Item to Add --</option>
+                        <option th:each="f : ${foodItems}" th:value="${f.id}" th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
+                    </select>
+                </div>
+                <div class="form-group" style="width: 100px; margin-bottom: 0;">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="quantity" value="1" min="1" max="50" class="form-control" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="height: 42px;">Add Item &rarr;</button>
+            </form>
+        </div>
     </div>
 </main>
 

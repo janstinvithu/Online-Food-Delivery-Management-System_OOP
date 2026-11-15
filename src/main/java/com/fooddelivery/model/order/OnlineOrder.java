@@ -107,6 +107,14 @@ public class OnlineOrder extends FoodOrder {
     }
 
     @Override
+    public void cancelOrder() {
+        super.cancelOrder();
+        if (delivery != null) {
+            delivery.cancelDelivery();
+        }
+    }
+
+    @Override
     @Transient
     public String getFulfillmentType() {
         return "Online Delivery to: " + deliveryAddress;

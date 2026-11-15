@@ -73,12 +73,26 @@ public class Delivery {
         this.deliveryStatus = deliveryStatus.trim().toUpperCase();
         if ("OUT_FOR_DELIVERY".equals(this.deliveryStatus) && departureTime == null) {
             this.departureTime = LocalDateTime.now();
-        } else if ("DELIVERED".equals(this.deliveryStatus) && deliveredTime == null) {
-            this.deliveredTime = LocalDateTime.now();
+        } else if ("DELIVERED".equals(this.deliveryStatus)) {
+            if (this.deliveredTime == null) {
+                this.deliveredTime = LocalDateTime.now();
+            }
+            if (this.deliveryPerson != null) {
+                this.deliveryPerson.setAvailable(true);
+            }
+        } else if ("CANCELLED".equals(this.deliveryStatus)) {
             if (this.deliveryPerson != null) {
                 this.deliveryPerson.setAvailable(true);
             }
         }
+    }
+
+    public void markDelivered() {
+        setDeliveryStatus("DELIVERED");
+    }
+
+    public void cancelDelivery() {
+        setDeliveryStatus("CANCELLED");
     }
 
     public LocalDateTime getDepartureTime() {

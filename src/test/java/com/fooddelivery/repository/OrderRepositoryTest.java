@@ -50,6 +50,8 @@ public class OrderRepositoryTest {
         order1.setOrderStatus("PENDING");
         entityManager.persistAndFlush(order1);
 
+        long initialDeliveredCount = foodOrderRepository.countByOrderStatus("DELIVERED");
+
         OnlineOrder order2 = new OnlineOrder(customer2, "Wattala", "Gate 2", new BigDecimal("350.00"));
         order2.setOrderNumber("ORD-SL-1002");
         order2.setTotalAmount(new BigDecimal("4000.00"));
@@ -71,6 +73,6 @@ public class OrderRepositoryTest {
         assertEquals("Chaminda Vaas", numResults.get(0).getCustomer().getFullName());
 
         // Count by status
-        assertEquals(1, foodOrderRepository.countByOrderStatus("DELIVERED"));
+        assertEquals(initialDeliveredCount + 1, foodOrderRepository.countByOrderStatus("DELIVERED"));
     }
 }
