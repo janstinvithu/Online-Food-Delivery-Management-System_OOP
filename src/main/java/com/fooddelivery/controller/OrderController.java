@@ -34,11 +34,26 @@ public class OrderController {
     }
 
     @GetMapping
-    public String listOrders(HttpSession session, Model model) {
+    public String listOrders(@RequestParam(value = "status", required = false) String status,
+                             @RequestParam(value = "search", required = false) String search,
+                             HttpSession session, Model model) {
         if (session != null && "CUSTOMER".equalsIgnoreCase((String) session.getAttribute("userRole"))) {
             return "redirect:/orders/my-orders";
         }
-        model.addAttribute("orders", orderService.getAllOrders());
+
+        List<FoodOrder> orders;
+        if (search != null && !search.trim().isEmpty()) {
+            orders = orderService.searchOrders(search.trim());
+        } else if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status.trim())) {
+            orders = orderService.getOrdersByStatus(status.trim());
+        } else {
+            orders = orderService.getAllOrders();
+        }
+
+        model.addAttribute("orders", orders);
+        model.addAttribute("currentStatus", (status != null && !status.trim().isEmpty()) ? status.trim().toUpperCase() : "ALL");
+        model.addAttribute("searchQuery", (search != null) ? search.trim() : "");
+        model.addAttribute("stats", orderService.getOrderSummaryStats());
         return "order/order-history";
     }
 
@@ -58,6 +73,28 @@ public class OrderController {
         model.addAttribute("orders", orders);
         model.addAttribute("createdOrderNumber", createdOrderNumber);
         return "order/my-orders";
+    }
+
+    @PostMapping("/my-orders/{id}/cancel")
+    public String cancelMyOrder(@PathVariable Long id,
+                                HttpSession session,
+                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        Long customerId = (session != null) ? (Long) session.getAttribute("userId") : null;
+        if (customerId == null) {
+            return "redirect:/login";
+        }
+        try {
+            FoodOrder order = orderService.getOrderById(id);
+            if (!order.getCustomer().getId().equals(customerId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized: You do not have permission to cancel this order.");
+                return "redirect:/orders/my-orders";
+            }
+            orderService.cancelOrder(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Order #" + order.getOrderNumber() + " was successfully cancelled.");
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/orders/my-orders";
     }
 
     @GetMapping({"/new", "/create"})

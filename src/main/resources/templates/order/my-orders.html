@@ -85,6 +85,16 @@
         <span>Order placed successfully! Order reference: <strong th:text="${createdOrderNumber}">ORD-12345</strong></span>
     </div>
 
+    <!-- Success and Error alerts -->
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Action succeeded!</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">An error occurred.</span>
+    </div>
+
     <!-- Customer & Membership Tier Header -->
     <div class="tier-banner fade-in">
         <div>
@@ -151,8 +161,8 @@
                     </div>
                 </div>
 
-                <!-- Payment Status Action -->
-                <div>
+                <!-- Payment Status Action & Cancel -->
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                     <span th:if="${ord.payment != null and ord.payment.paymentStatus == 'COMPLETED'}" 
                           class="status-pill status-DELIVERED">
                         ✓ Paid (<span th:text="${ord.payment.paymentDetails}">Card •••• 4242</span>)
@@ -161,6 +171,9 @@
                        th:href="@{'/payments/checkout/' + ${ord.id}}" class="btn btn-primary btn-sm">
                         💳 Settle Payment
                     </a>
+                    <form th:if="${ord.cancellable}" th:action="@{'/orders/my-orders/' + ${ord.id} + '/cancel'}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.3);">Cancel Order</button>
+                    </form>
                 </div>
             </div>
 
