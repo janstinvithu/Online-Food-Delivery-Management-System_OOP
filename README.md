@@ -133,10 +133,14 @@ classDiagram
 2. **Component 02 - Customer Management**:
    - JPA Single Table: `Customer` (Guest) -> `RegisteredCustomer` (`loyaltyPoints`, dynamic discount tiers: Platinum 15%, Gold 10%, Silver 5%, Bronze 0%).
    - Routes: Directory (`/customers`), Register (`/customers/new`), Edit Profile (`/customers/edit/{id}`), Delete (`/customers/delete/{id}`).
-3. **Component 03 - Food Order Management**:
-   - JPA Joined Table: `FoodOrder` -> `OnlineOrder` (LKR 350.00 standard delivery fee) and `PickupOrder` (counter slot & curbside flag).
-   - Dynamic Financial Logic: Automatically calculates line subtotals, computes loyalty discounts, adds fulfillment fees, and calculates net totals.
-   - Routes: Checkout (`/orders/new`), Order Logs (`/orders`), Status Management (`/orders/edit/{id}`), Cancellation (`/orders/{id}/cancel`).
+3. **Component 03 - Food Order Management (feature/orders)**:
+   - **JPA Joined Table Inheritance**: `FoodOrder` (abstract base) -> `OnlineOrder` (LKR 350.00 standard metropolitan delivery fee) and `PickupOrder` (counter slot & curbside flag).
+   - **Order Lifecycle State Machine (`OrderStatus` Enum)**: Strict transition validation (`PENDING` -> `CONFIRMED` -> `PREPARING` -> `READY` -> `OUT_FOR_DELIVERY` -> `DELIVERED`, with `CANCELLED` and terminal state protection).
+   - **Dynamic Financial & Item Calculations**: Automatically calculates item subtotals, merges duplicate line items, applies tiered loyalty discounts (up to 15% for Platinum), adds delivery fees, and ensures non-negative net totals.
+   - **Order Search & Status Filtering**: Real-time multi-field search across order numbers, customer names, and contact phone numbers; status filtering tabs (`ALL`, `PENDING`, `PREPARING`, `READY`, `DELIVERED`, `CANCELLED`).
+   - **Operational KPI Analytics**: Centralized metrics dashboard providing live counts of total orders, active in-flight orders, delivered orders, and delivered revenue in Sri Lankan Rupees (LKR).
+   - **Customer Self-Service Actions**: Direct customer view at `/orders/my-orders` with status indicators, tracking numbers, and safe self-service cancellation for active pending orders.
+   - **Routes**: Checkout (`/orders/new`), Order Logs (`/orders`), Status Management (`/orders/edit/{id}`), Cancellation (`/orders/{id}/cancel` & `/orders/my-orders/{id}/cancel`).
 4. **Component 04 - Delivery & Payment Management**:
    - Associations: OneToOne between `OnlineOrder` and `Delivery`; ManyToOne between `Delivery` and `DeliveryPerson`.
    - Polymorphic Payments: `CashPayment` (tendered vs change due) and `CardPayment` (4-digit card mask & authorization tokens).
