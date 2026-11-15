@@ -190,24 +190,6 @@ select.form-control option {
     transform: translateY(-1px);
 }
 
-.btn-danger-solid,
-.btn-signout {
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-    color: #FFFFFF !important;
-    border-color: #DC2626;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.28);
-    font-weight: 600;
-}
-
-.btn-danger-solid:hover,
-.btn-signout:hover {
-    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-    color: #FFFFFF !important;
-    border-color: #B91C1C;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.42);
-    transform: translateY(-1px);
-}
-
 .btn-success {
     background: var(--accent-emerald-light);
     color: var(--accent-emerald);

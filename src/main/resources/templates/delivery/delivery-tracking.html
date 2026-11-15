@@ -30,7 +30,11 @@
             <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Delivery Dispatch Board</h1>
 
         </div>
-        <a th:href="@{/deliveries/new}" class="btn btn-primary">+ Assign Courier</a>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a th:href="@{/deliveries/zones}" class="btn btn-secondary">Delivery zones</a>
+            <a th:href="@{/deliveries/couriers}" class="btn btn-secondary">Manage couriers</a>
+            <a th:href="@{/deliveries/new}" class="btn btn-primary">+ Assign Courier</a>
+        </div>
     </div>
 
     <!-- Active Couriers Fleet Highlights -->
@@ -117,6 +121,7 @@
                     </td>
                     <td>
                         <div class="table-actions">
+                            <a th:href="@{'/deliveries/' + ${d.id} + '/checkpoints'}" class="btn btn-secondary btn-sm">Checkpoints</a>
                             <a th:if="${d.deliveryPerson == null and d.deliveryStatus != 'CANCELLED'}" 
                                th:href="@{'/deliveries/assign/' + ${d.id}}" class="btn btn-primary btn-sm">Assign Courier</a>
                             <form th:if="${d.deliveryPerson != null and d.deliveryStatus != 'DELIVERED' and d.deliveryStatus != 'CANCELLED'}" 

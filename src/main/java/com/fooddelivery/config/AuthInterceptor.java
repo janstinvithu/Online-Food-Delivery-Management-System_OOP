@@ -86,10 +86,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (path.startsWith("/deliveries")) {
             return true;
         }
-        if (path.equals("/orders")) {
+        if (path.startsWith("/orders/status") || path.startsWith("/orders/edit")) {
             return true;
         }
-        if (path.startsWith("/orders/") && !path.startsWith("/orders/my-orders") && !path.startsWith("/orders/new") && !path.startsWith("/orders/create")) {
+        if (path.equals("/orders")) {
             return true;
         }
         // Admin customer audit directory & mutations (excluding customer's self-profile and registration)

@@ -38,9 +38,34 @@
     </div>
 
     <!-- Error Alert Banner -->
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Payment saved.</span>
+    </div>
     <div th:if="${errorMessage != null or param.error != null}" class="alert-error">
         <span>⚠️</span>
         <span th:text="${errorMessage != null ? errorMessage : param.error}">Payment validation error occurred.</span>
+    </div>
+
+    <div th:if="${registeredCustomer}" class="card-container" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.2rem;">Saved payment method</h2>
+        <p style="color: var(--text-secondary);" th:if="${savedMethod != null}">
+            Current method: <strong th:text="${savedMethod}">CARD</strong>
+        </p>
+        <p style="color: var(--text-secondary);" th:unless="${savedMethod != null}">No saved payment method yet.</p>
+        <form th:action="@{'/payments/' + ${order.id} + '/method'}" method="post" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="savedMethod">Method</label>
+                <select id="savedMethod" name="method" class="form-control">
+                    <option value="CARD" th:selected="${savedMethod == 'CARD'}">Card</option>
+                    <option value="CASH" th:selected="${savedMethod == 'CASH'}">Cash</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save method</button>
+        </form>
+        <form th:if="${savedMethod != null}" th:action="@{'/payments/' + ${order.id} + '/method/delete'}" method="post" style="margin-top: 0.75rem;">
+            <button type="submit" class="btn btn-danger btn-sm">Clear saved method</button>
+        </form>
     </div>
 
     <!-- Settlement Completed Receipt View -->
@@ -79,6 +104,82 @@
             </div>
         </div>
 
+        <form th:if="${payment.paymentStatus != 'REFUNDED'}" th:action="@{'/payments/' + ${order.id} + '/update'}" method="post" style="margin-top: 1.75rem;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="paymentStatus">Status</label>
+                    <select id="paymentStatus" name="status" class="form-control">
+                        <option th:each="choice : ${ {'PENDING','AUTHORIZED','COMPLETED','FAILED','REFUNDED'} }"
+                                th:value="${choice}" th:text="${choice}" th:selected="${choice == payment.paymentStatus}">PENDING</option>
+                    </select>
+                </div>
+                <div class="form-group" th:if="${cashPayment}">
+                    <label class="form-label" for="amountTendered">Amount tendered (LKR)</label>
+                    <input id="amountTendered" name="amountTendered" type="number" step="0.01" min="0" class="form-control"
+                           th:value="${payment.amountTendered}">
+                </div>
+                <div class="form-group" th:if="${cardPayment}">
+                    <label class="form-label" for="authorizationCode">Authorization code</label>
+                    <input id="authorizationCode" name="authorizationCode" class="form-control" maxlength="50"
+                           th:value="${payment.authorizationCode}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update payment</button>
+        </form>
+        <form th:if="${payment.paymentStatus == 'PENDING' or payment.paymentStatus == 'FAILED'}"
+              th:action="@{'/payments/' + ${order.id} + '/delete'}" method="post" style="margin-top: 0.75rem;"
+              onsubmit="return confirm('Remove this payment so the order can be paid again?');">
+            <button type="submit" class="btn btn-danger btn-sm">Delete payment</button>
+        </form>
+
+        <div style="margin-top: 1.75rem;" th:if="${payment.paymentStatus == 'COMPLETED' or !#lists.isEmpty(refunds)}">
+            <h2 class="section-title" style="font-size: 1.2rem;">Refund</h2>
+            <div th:each="refund : ${refunds}" style="margin-top: 1rem;">
+                <form th:action="@{'/payments/' + ${order.id} + '/refunds'}" method="post">
+                    <input type="hidden" name="refundId" th:value="${refund.id}">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Amount (LKR)</label>
+                            <input name="amount" type="number" step="0.01" min="0.01" class="form-control" required th:value="${refund.amount}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Reason</label>
+                            <input name="reason" class="form-control" maxlength="255" required th:value="${refund.reason}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-control">
+                                <option value="REQUESTED" th:selected="${refund.status == 'REQUESTED'}">REQUESTED</option>
+                                <option value="PAID" th:selected="${refund.status == 'PAID'}">PAID</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Update refund</button>
+                </form>
+                <form th:if="${refund.status == 'REQUESTED'}" method="post" style="margin-top: 0.75rem;"
+                      th:action="@{'/payments/' + ${order.id} + '/refunds/' + ${refund.id} + '/delete'}"
+                      onsubmit="return confirm('Remove this refund request?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete refund</button>
+                </form>
+            </div>
+            <form th:if="${payment.paymentStatus == 'COMPLETED' and #lists.isEmpty(refunds)}"
+                  th:action="@{'/payments/' + ${order.id} + '/refunds'}" method="post" style="margin-top: 1rem;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="refundAmount">Amount (LKR)</label>
+                        <input id="refundAmount" name="amount" type="number" step="0.01" min="0.01" class="form-control" required
+                               th:value="${payment.amount}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="refundReason">Reason</label>
+                        <input id="refundReason" name="reason" class="form-control" maxlength="255" required
+                               placeholder="Missing item or late delivery">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Request refund</button>
+            </form>
+        </div>
+
         <div style="margin-top: 2.5rem; text-align: center; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
             <a th:href="@{'/orders/edit/' + ${order.id}}" class="btn btn-secondary">Review Order</a>
             <a th:href="@{/orders}" class="btn btn-primary">Return to Order Logs &rarr;</a>
@@ -103,7 +204,8 @@
         </div>
 
         <!-- Card Payment Form -->
-        <div id="cardPayPanel" class="tab-panel card-container fade-in" style="padding: 2rem;">
+        <div id="cardPayPanel" class="tab-panel card-container fade-in"
+             th:style="${savedMethod == 'CASH'} ? 'display: none; padding: 2rem;' : 'padding: 2rem;'">
             <form th:action="@{'/payments/' + ${order.id} + '/card'}" method="post">
                 <div class="form-grid" style="padding: 0;">
                     <div class="form-group">
@@ -139,7 +241,8 @@
         </div>
 
         <!-- Cash Payment Form -->
-        <div id="cashPayPanel" class="tab-panel card-container fade-in" style="display: none; padding: 2rem;">
+        <div id="cashPayPanel" class="tab-panel card-container fade-in"
+             th:style="${savedMethod == 'CASH'} ? 'padding: 2rem;' : 'display: none; padding: 2rem;'">
             <form th:action="@{'/payments/' + ${order.id} + '/cash'}" method="post">
                 <div class="form-grid" style="padding: 0;">
                     <div class="form-group full-width">

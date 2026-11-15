@@ -37,6 +37,30 @@
         </a>
     </div>
 
+    <div class="section-header" style="margin-top: 0.5rem;">
+        <div>
+            <h2 class="section-title">Menu</h2>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 0;">Click a food card, then complete the order below.</p>
+        </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+        <button type="button" class="card-container food-order-card"
+                th:each="food : ${foodItems}"
+                th:attr="data-food-id=${food.id}"
+                th:disabled="${!food.available}"
+                style="width: 100%; margin-bottom: 0; text-align: left; padding: 1.25rem; cursor: pointer; font: inherit; color: inherit;">
+            <span class="status-pill status-READY" th:text="${food.foodCategory}">Main Course</span>
+            <h3 style="margin: 0.75rem 0 0.35rem 0; font-size: 1.05rem;" th:text="${food.name}">Chicken Dum Biryani</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; min-height: 2.6rem;" th:text="${food.description}">Description</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                <strong style="color: var(--primary);" th:text="${@currency.format(food.price)}">LKR 1,850.00</strong>
+                <span style="color: var(--text-muted); font-size: 0.82rem;" th:text="${food.preparationTimeMinutes} + ' min'">25 min</span>
+            </div>
+        </button>
+    </div>
+
+    <div id="order-form"></div>
+
     <!-- Error Alert Banner -->
     <div th:if="${errorMessage != null}" class="alert-error">
         <span>⚠️</span>
@@ -71,7 +95,7 @@
          th:style="${activeTab == 'pickup' ? 'display: none;' : 'display: block;'}">
         <form th:action="@{/orders/new/online}" method="post">
             <div class="form-grid">
-                <div class="form-group">
+                <div class="form-group" th:if="${currentCustomer == null}">
                     <label class="form-label" for="onlineCustSelect">Customer *</label>
                     <select id="onlineCustSelect" name="customerId" class="form-control" required>
                         <option value="" disabled th:selected="${selectedCustomerId == null}">-- Select Customer --</option>
@@ -80,24 +104,56 @@
                                 th:text="${c.fullName} + ' (' + ${c.email} + ')'"></option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="foodSelect">Food Item *</label>
-                    <select name="foodItemId" id="foodSelect" class="form-control" required>
-                        <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
-                        <option th:each="f : ${foodItems}" th:value="${f.id}" 
-                                th:data-price="${f.price}"
-                                th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
-                                th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
-                    </select>
+                <div class="form-group" th:if="${currentCustomer != null}">
+                    <label class="form-label">Customer</label>
+                    <input type="hidden" name="customerId" th:value="${currentCustomer.id}">
+                    <input class="form-control" th:value="${currentCustomer.fullName}" readonly>
+                </div>
+                <div class="form-group full-width" id="onlineItemRows" style="gap: 1rem;">
+                    <div class="order-item-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="foodSelect">Food Item *</label>
+                            <select name="foodItemId" id="foodSelect" class="form-control" required>
+                                <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
+                                <option th:each="f : ${foodItems}" th:value="${f.id}"
+                                        th:data-price="${f.price}"
+                                        th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
+                                        th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="quantityInput">Quantity *</label>
+                            <div class="qty-stepper">
+                                <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
+                                <input type="number" name="quantity" id="quantityInput"
+                                       th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
+                                <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-add-item="#onlineItemRows">+ Add another item</button>
+                </div>
+                <div class="form-group full-width" th:if="${savedAddresses != null and !#lists.isEmpty(savedAddresses)}">
+                    <label class="form-label">Saved addresses</label>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm saved-address"
+                                th:each="address : ${savedAddresses}"
+                                th:attr="data-address=${address.addressLine}"
+                                th:text="${address.label}">Home</button>
+                        <a th:href="@{/orders/addresses}" class="btn btn-secondary btn-sm">Manage addresses</a>
+                    </div>
+                </div>
+                <div class="form-group" th:if="${currentCustomer != null and (savedAddresses == null or #lists.isEmpty(savedAddresses))}">
+                    <a th:href="@{/orders/addresses}" class="btn btn-secondary btn-sm">Save an address</a>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="quantityInput">Quantity *</label>
-                    <div class="qty-stepper">
-                        <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
-                        <input type="number" name="quantity" id="quantityInput" 
-                               th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
-                        <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
-                    </div>
+                    <label class="form-label" for="deliveryZone">Delivery zone</label>
+                    <select id="deliveryZone" name="deliveryZoneId" class="form-control">
+                        <option value="">Custom fee</option>
+                        <option th:each="zone : ${deliveryZones}" th:value="${zone.id}"
+                                th:data-fee="${zone.fee}"
+                                th:text="${zone.areaName} + ' — ' + ${@currency.format(zone.fee)}">Colombo 07</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="deliveryFeeInput">Delivery Fee (LKR) *</label>
@@ -136,7 +192,7 @@
          th:style="${activeTab == 'pickup' ? 'display: block;' : 'display: none;'}">
         <form th:action="@{/orders/new/pickup}" method="post">
             <div class="form-grid">
-                <div class="form-group">
+                <div class="form-group" th:if="${currentCustomer == null}">
                     <label class="form-label" for="pickupCustSelect">Customer *</label>
                     <select id="pickupCustSelect" name="customerId" class="form-control" required>
                         <option value="" disabled th:selected="${selectedCustomerId == null}">-- Select Customer --</option>
@@ -145,24 +201,34 @@
                                 th:text="${c.fullName} + ' (' + ${c.email} + ')'"></option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="pickupFoodSelect">Food Item *</label>
-                    <select id="pickupFoodSelect" name="foodItemId" class="form-control" required>
-                        <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
-                        <option th:each="f : ${foodItems}" th:value="${f.id}" 
-                                th:data-price="${f.price}"
-                                th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
-                                th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
-                    </select>
+                <div class="form-group" th:if="${currentCustomer != null}">
+                    <label class="form-label">Customer</label>
+                    <input type="hidden" name="customerId" th:value="${currentCustomer.id}">
+                    <input class="form-control" th:value="${currentCustomer.fullName}" readonly>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="pickupQty">Quantity *</label>
-                    <div class="qty-stepper">
-                        <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
-                        <input type="number" id="pickupQty" name="quantity" 
-                               th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
-                        <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
+                <div class="form-group full-width" id="pickupItemRows" style="gap: 1rem;">
+                    <div class="order-item-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="pickupFoodSelect">Food Item *</label>
+                            <select id="pickupFoodSelect" name="foodItemId" class="form-control" required>
+                                <option value="" disabled th:selected="${selectedFoodItemId == null}">-- Select Dish / Beverage --</option>
+                                <option th:each="f : ${foodItems}" th:value="${f.id}"
+                                        th:data-price="${f.price}"
+                                        th:selected="${selectedFoodItemId != null and f.id == selectedFoodItemId}"
+                                        th:text="${f.name} + ' — ' + ${@currency.format(f.price)}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="pickupQty">Quantity *</label>
+                            <div class="qty-stepper">
+                                <button type="button" class="qty-minus" aria-label="Decrease">&minus;</button>
+                                <input type="number" id="pickupQty" name="quantity"
+                                       th:value="${enteredQuantity != null ? enteredQuantity : 1}" min="1" max="100" required>
+                                <button type="button" class="qty-plus" aria-label="Increase">&plus;</button>
+                            </div>
+                        </div>
                     </div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-add-item="#pickupItemRows">+ Add another item</button>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="pickupTimeSlotInput">Pickup Time Slot *</label>
@@ -195,15 +261,9 @@
                     </label>
                 </div>
             </div>
-            <div class="form-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div style="font-size: 1.15rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                    <span>Estimated Total:</span> 
-                    <strong id="pickupTotalEstimate" style="color: var(--primary); font-family: var(--font-heading); font-size: 1.35rem;">LKR 0.00</strong>
-                </div>
-                <div style="display: flex; gap: 0.75rem;">
-                    <a th:href="${session.userRole == 'CUSTOMER' ? '/orders/my-orders' : '/orders'}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Submit Pickup Order &rarr;</button>
-                </div>
+            <div class="form-footer">
+                <a th:href="${session.userRole == 'CUSTOMER' ? '/orders/my-orders' : '/orders'}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Submit Pickup Order &rarr;</button>
             </div>
         </form>
     </div>
@@ -212,5 +272,55 @@
 <div th:replace="~{layout/footer :: footer}"></div>
 
 <script th:src="@{/js/app.js}"></script>
+<script>
+    document.querySelectorAll('.food-order-card').forEach(card => {
+        card.addEventListener('click', () => selectFoodCard(card));
+    });
+
+    function selectFoodCard(card) {
+        const id = card.getAttribute('data-food-id');
+        document.querySelectorAll('.food-order-card').forEach(other => {
+            other.style.borderColor = '';
+        });
+        card.style.borderColor = 'var(--primary)';
+        document.querySelectorAll('select[name="foodItemId"]').forEach(select => {
+            select.value = id;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        const form = document.getElementById('order-form');
+        if (form) {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    const zoneSelect = document.getElementById('deliveryZone');
+    if (zoneSelect) {
+        zoneSelect.addEventListener('change', () => {
+            const option = zoneSelect.options[zoneSelect.selectedIndex];
+            const fee = option.getAttribute('data-fee');
+            const feeInput = document.getElementById('deliveryFeeInput');
+            if (fee && feeInput) {
+                feeInput.value = fee;
+                feeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    }
+    document.querySelectorAll('.saved-address').forEach(button => {
+        button.addEventListener('click', () => {
+            const address = document.getElementById('deliveryAddressInput');
+            if (address) {
+                address.value = button.getAttribute('data-address');
+            }
+        });
+    });
+
+    const preselected = document.querySelector('select[name="foodItemId"] option:checked');
+    if (preselected && preselected.value) {
+        const match = document.querySelector('.food-order-card[data-food-id="' + preselected.value + '"]');
+        if (match) {
+            match.style.borderColor = 'var(--primary)';
+        }
+    }
+</script>
 </body>
 </html>

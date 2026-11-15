@@ -1,42 +1,31 @@
 package com.fooddelivery.model.order;
 
+import com.fooddelivery.common.util.PersistentIds;
 import com.fooddelivery.model.food.FoodItem;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@Entity
-@Table(name = "order_items")
 public class OrderItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "Order reference is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
     private FoodOrder order;
 
     @NotNull(message = "Food item is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "food_item_id", nullable = false)
     private FoodItem foodItem;
 
     @Min(value = 1, message = "Quantity must be at least 1")
-    @Column(name = "quantity", nullable = false)
     private int quantity;
 
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.01", message = "Unit price must be positive")
-    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
     @NotNull(message = "Subtotal is required")
-    @Column(name = "subtotal", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
 
     public OrderItem() {
@@ -54,6 +43,10 @@ public class OrderItem {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
     }
 
     public FoodOrder getOrder() {

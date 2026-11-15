@@ -244,8 +244,10 @@ function initFilterChips() {
 }
 
 // Interactive Quantity Steppers
-function initQuantitySteppers() {
-    document.querySelectorAll('.qty-stepper').forEach(stepper => {
+function initQuantitySteppers(root) {
+    (root || document).querySelectorAll('.qty-stepper').forEach(stepper => {
+        if (stepper.dataset.bound === 'true') return;
+        stepper.dataset.bound = 'true';
         const input = stepper.querySelector('input');
         const btnMinus = stepper.querySelector('.qty-minus');
         const btnPlus = stepper.querySelector('.qty-plus');
@@ -373,14 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 9. Dynamic Price Calculation for Order Creation Form
-    const foodSelect = document.getElementById('foodSelect');
-    const quantityInput = document.getElementById('quantityInput');
     const deliveryFeeInput = document.getElementById('deliveryFeeInput');
     const totalDisplay = document.getElementById('orderTotalEstimate');
-
-    const pickupFoodSelect = document.getElementById('pickupFoodSelect');
-    const pickupQty = document.getElementById('pickupQty');
-    const pickupTotalDisplay = document.getElementById('pickupTotalEstimate');
 
     function formatLKR(amount) {
         return 'LKR ' + Number(amount || 0).toLocaleString('en-US', {
@@ -390,41 +386,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateOrderEstimate() {
-        if (!foodSelect || !quantityInput || !totalDisplay) return;
-        const selectedOption = foodSelect.options[foodSelect.selectedIndex];
-        if (!selectedOption) return;
-        
-        const price = parseFloat(selectedOption.getAttribute('data-price') || '0');
-        const qty = parseInt(quantityInput.value || '1', 10);
+        const panel = document.getElementById('onlineOrderPanel');
+        if (!panel || !totalDisplay) return;
+        let foodTotal = 0;
+        panel.querySelectorAll('.order-item-row').forEach(row => {
+            const select = row.querySelector('select[name="foodItemId"]');
+            const qtyInput = row.querySelector('input[name="quantity"]');
+            const option = select ? select.options[select.selectedIndex] : null;
+            const price = parseFloat(option?.getAttribute('data-price') || '0');
+            const qty = parseInt(qtyInput?.value || '1', 10);
+            if (option && option.value) {
+                foodTotal += price * qty;
+            }
+        });
         const deliveryFee = parseFloat(deliveryFeeInput?.value || '0');
-        
-        const total = (price * qty) + deliveryFee;
-        totalDisplay.textContent = formatLKR(total);
+        totalDisplay.textContent = formatLKR(foodTotal + deliveryFee);
     }
 
-    function updatePickupEstimate() {
-        if (!pickupFoodSelect || !pickupQty || !pickupTotalDisplay) return;
-        const selectedOption = pickupFoodSelect.options[pickupFoodSelect.selectedIndex];
-        if (!selectedOption) return;
+    document.querySelectorAll('[data-add-item]').forEach(button => {
+        button.addEventListener('click', () => {
+            const host = document.querySelector(button.getAttribute('data-add-item'));
+            const row = host ? host.querySelector('.order-item-row') : null;
+            if (!row) return;
+            const copy = row.cloneNode(true);
+            copy.querySelectorAll('[id]').forEach(field => field.removeAttribute('id'));
+            copy.querySelectorAll('.qty-stepper').forEach(stepper => stepper.removeAttribute('data-bound'));
+            copy.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+            copy.querySelectorAll('input[name="quantity"]').forEach(input => { input.value = '1'; });
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'btn btn-danger btn-sm remove-item-row';
+            remove.textContent = 'Remove';
+            remove.addEventListener('click', () => {
+                copy.remove();
+                updateOrderEstimate();
+            });
+            copy.appendChild(remove);
+            host.insertBefore(copy, button);
+            initQuantitySteppers(copy);
+            updateOrderEstimate();
+        });
+    });
 
-        const price = parseFloat(selectedOption.getAttribute('data-price') || '0');
-        const qty = parseInt(pickupQty.value || '1', 10);
-        const total = price * qty;
-        pickupTotalDisplay.textContent = formatLKR(total);
-    }
-
-    if (foodSelect && quantityInput) {
-        foodSelect.addEventListener('change', updateOrderEstimate);
-        quantityInput.addEventListener('input', updateOrderEstimate);
-        if (deliveryFeeInput) {
-            deliveryFeeInput.addEventListener('input', updateOrderEstimate);
-        }
+    const onlinePanel = document.getElementById('onlineOrderPanel');
+    if (onlinePanel && totalDisplay) {
+        onlinePanel.addEventListener('change', updateOrderEstimate);
+        onlinePanel.addEventListener('input', updateOrderEstimate);
         updateOrderEstimate();
-    }
-
-    if (pickupFoodSelect && pickupQty) {
-        pickupFoodSelect.addEventListener('change', updatePickupEstimate);
-        pickupQty.addEventListener('input', updatePickupEstimate);
-        updatePickupEstimate();
     }
 });

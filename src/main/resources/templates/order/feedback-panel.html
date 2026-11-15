@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="feedback(order, complaints, review, canComplain, canReview)">
+    <div class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;" th:if="${canReview or review != null}">
+        <h2 class="section-title" style="font-size: 1.2rem;">Order review</h2>
+        <p th:if="${review != null}" style="color: var(--text-secondary); margin-bottom: 1rem;">
+            Current rating: <strong th:text="${review.rating} + ' / 5'">5 / 5</strong>
+        </p>
+        <div th:if="${review != null and review.adminReply != null}"
+             style="margin-bottom: 1rem; padding: 0.9rem 1rem; border-radius: var(--radius-md); background: var(--bg-secondary);">
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Restaurant reply</div>
+            <div th:text="${review.adminReply}">Thank you for the review.</div>
+        </div>
+        <form th:action="@{'/orders/my-orders/' + ${order.id} + '/review'}" method="post">
+            <input type="hidden" name="reviewId" th:if="${review != null}" th:value="${review.id}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="rating">Rating (1 to 5)</label>
+                    <input id="rating" name="rating" type="number" min="1" max="5" class="form-control" required
+                           th:value="${review != null} ? ${review.rating} : 5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reviewComment">Comment</label>
+                    <input id="reviewComment" name="comment" class="form-control" maxlength="255" required
+                           th:value="${review != null} ? ${review.comment} : ''"
+                           placeholder="How was the food and the delivery?">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" th:text="${review == null} ? 'Add review' : 'Update review'">Add review</button>
+        </form>
+        <form th:if="${review != null}" th:action="@{'/orders/my-orders/' + ${order.id} + '/review/delete'}" method="post"
+              style="margin-top: 0.75rem;" onsubmit="return confirm('Remove this review?');">
+            <input type="hidden" name="reviewId" th:value="${review.id}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete review</button>
+        </form>
+        <form th:if="${adminViewer and review != null}" th:action="@{'/orders/my-orders/' + ${order.id} + '/review/reply'}" method="post" style="margin-top: 1rem;">
+            <input type="hidden" name="reviewId" th:value="${review.id}">
+            <div class="form-group">
+                <label class="form-label" for="adminReply">Reply to this review</label>
+                <input id="adminReply" name="reply" class="form-control" maxlength="255" required
+                       th:value="${review.adminReply}"
+                       placeholder="Thank the customer or explain what you will do next">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" th:text="${review.adminReply == null} ? 'Add reply' : 'Update reply'">Add reply</button>
+        </form>
+    </div>
+
+    <div class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;" th:if="${canComplain or !#lists.isEmpty(complaints)}">
+        <h2 class="section-title" style="font-size: 1.2rem;">Complaints</h2>
+        <div th:each="complaint : ${complaints}" style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+            <form th:action="@{'/orders/my-orders/' + ${order.id} + '/complaints'}" method="post">
+                <input type="hidden" name="complaintId" th:value="${complaint.id}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <input name="message" class="form-control" maxlength="255" required th:value="${complaint.message}">
+                    </div>
+                    <div class="form-group" th:if="${adminViewer}">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-control">
+                            <option value="OPEN" th:selected="${complaint.status == 'OPEN'}">OPEN</option>
+                            <option value="RESOLVED" th:selected="${complaint.status == 'RESOLVED'}">RESOLVED</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Update complaint</button>
+            </form>
+            <form th:if="${complaint.status == 'OPEN'}"
+                  th:action="@{'/orders/my-orders/' + ${order.id} + '/complaints/' + ${complaint.id} + '/delete'}"
+                  method="post" style="margin-top: 0.75rem;" onsubmit="return confirm('Remove this complaint?');">
+                <button type="submit" class="btn btn-danger btn-sm">Delete complaint</button>
+            </form>
+        </div>
+        <form th:if="${canComplain}" th:action="@{'/orders/my-orders/' + ${order.id} + '/complaints'}" method="post" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label class="form-label" for="complaintMessage">New complaint</label>
+                <input id="complaintMessage" name="message" class="form-control" maxlength="255" required
+                       placeholder="What went wrong with this order?">
+            </div>
+            <button type="submit" class="btn btn-primary">Add complaint</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

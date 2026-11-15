@@ -4,12 +4,9 @@ import com.fooddelivery.common.exception.ResourceNotFoundException;
 import com.fooddelivery.model.food.FoodItem;
 import com.fooddelivery.repository.FoodItemRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional(readOnly = true)
-@SuppressWarnings("null")
 public class FoodService {
 
     private final FoodItemRepository foodItemRepository;
@@ -38,12 +35,10 @@ public class FoodService {
         return foodItemRepository.searchByName(keyword.trim());
     }
 
-    @Transactional
     public FoodItem saveFoodItem(FoodItem foodItem) {
         return foodItemRepository.save(foodItem);
     }
 
-    @Transactional
     public void deleteFoodItem(Long id) {
         FoodItem item = getFoodItemById(id);
         foodItemRepository.delete(item);

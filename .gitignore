@@ -32,3 +32,9 @@ target/
 *.log
 .DS_Store
 Thumbs.db
+
+### JSON runtime backups (the sample data file itself is kept) ###
+data/backups/
+data/*.bak
+data/*.tmp
+target/test-data/

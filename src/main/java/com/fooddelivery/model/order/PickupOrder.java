@@ -1,33 +1,23 @@
 package com.fooddelivery.model.order;
 
 import com.fooddelivery.model.customer.Customer;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-@Entity
-@Table(name = "pickup_orders")
-@DiscriminatorValue("PICKUP")
-@PrimaryKeyJoinColumn(name = "id")
 public class PickupOrder extends FoodOrder {
 
     @NotBlank(message = "Pickup time slot is required")
-    @Column(name = "pickup_time_slot", nullable = false, length = 50)
     private String pickupTimeSlot; // e.g. "12:30 PM - 12:45 PM"
 
     @Min(value = 1, message = "Pickup window must be at least 1 minute")
-    @Column(name = "pickup_window_minutes", nullable = false)
     private int pickupWindowMinutes;
 
     @Min(value = 1, message = "Counter number must be positive")
-    @Column(name = "counter_number", nullable = false)
     private int counterNumber;
 
     @NotBlank(message = "Pickup contact phone is required")
-    @Column(name = "pickup_contact_phone", nullable = false, length = 25)
     private String pickupContactPhone;
 
-    @Column(name = "is_curbside_pickup", nullable = false)
     private boolean curbsidePickup;
 
     public PickupOrder() {
@@ -100,7 +90,6 @@ public class PickupOrder extends FoodOrder {
     }
 
     @Override
-    @Transient
     public String getFulfillmentType() {
         return (curbsidePickup ? "Curbside Pickup" : "Counter #" + counterNumber) + " (Slot: " + pickupTimeSlot + ")";
     }

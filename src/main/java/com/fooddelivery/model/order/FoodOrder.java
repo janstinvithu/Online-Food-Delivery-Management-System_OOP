@@ -1,11 +1,11 @@
 package com.fooddelivery.model.order;
 
 import com.fooddelivery.common.util.OrderIdGenerator;
+import com.fooddelivery.common.util.PersistentIds;
 import com.fooddelivery.model.customer.Customer;
 import com.fooddelivery.model.customer.RegisteredCustomer;
 import com.fooddelivery.model.delivery.Payment;
 import com.fooddelivery.model.food.FoodItem;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,49 +16,33 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "food_orders")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "order_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class FoodOrder {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Order number is required")
-    @Column(name = "order_number", nullable = false, unique = true, length = 36)
     private String orderNumber;
 
     @NotBlank(message = "Order status is required")
-    @Column(name = "order_status", nullable = false, length = 30)
     private String orderStatus; // PENDING, PREPARING, READY, DELIVERED, CANCELLED
 
-    @Column(name = "order_date_time", nullable = false)
     private LocalDateTime orderDateTime;
 
     @NotNull(message = "Subtotal amount is required")
     @DecimalMin(value = "0.00", message = "Subtotal cannot be negative")
-    @Column(name = "subtotal_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotalAmount = BigDecimal.ZERO;
 
-    @Column(name = "discount_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.00", message = "Total amount cannot be negative")
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @NotNull(message = "Customer reference is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private final List<OrderItem> orderItems = new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Payment payment;
 
     public FoodOrder() {
@@ -79,6 +63,23 @@ public abstract class FoodOrder {
         return id;
     }
 
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
+    }
+
+    /**
+     * Reattaches a stored line without the availability check used for new orders.
+     */
+    public void restoreOrderItem(OrderItem item) {
+        if (item == null) {
+            throw new IllegalArgumentException("Order item cannot be null");
+        }
+        if (!orderItems.contains(item)) {
+            orderItems.add(item);
+            item.setOrder(this);
+        }
+    }
+
     public String getOrderNumber() {
         return orderNumber;
     }
@@ -94,81 +95,22 @@ public abstract class FoodOrder {
         return orderStatus;
     }
 
-    public OrderStatus getStatusEnum() {
-        return OrderStatus.fromString(this.orderStatus);
-    }
-
     public void setOrderStatus(String orderStatus) {
         if (orderStatus == null || orderStatus.trim().isEmpty()) {
             throw new IllegalArgumentException("Order status cannot be blank");
         }
-        OrderStatus newStatus = OrderStatus.fromString(orderStatus);
-        if (newStatus.name().equalsIgnoreCase(this.orderStatus)) {
-            return;
+        String upper = orderStatus.trim().toUpperCase();
+        if ("CANCELLED".equals(this.orderStatus) || "DELIVERED".equals(this.orderStatus)) {
+            throw new IllegalStateException("Order is in a terminal state: " + this.orderStatus);
         }
-        if (isTerminal()) {
-            throw new IllegalStateException("Order is in a terminal state (" + this.orderStatus + ") and cannot be modified.");
-        }
-        if (newStatus == OrderStatus.OUT_FOR_DELIVERY && isPickupOrder()) {
-            throw new IllegalArgumentException("Pickup orders cannot be set to OUT_FOR_DELIVERY. Customers collect orders directly at the counter.");
-        }
-        this.orderStatus = newStatus.name();
-    }
-
-    public void setOrderStatus(OrderStatus orderStatus) {
-        if (orderStatus == null) {
-            throw new IllegalArgumentException("Order status cannot be null");
-        }
-        setOrderStatus(orderStatus.name());
-    }
-
-    public boolean isTerminal() {
-        return "DELIVERED".equalsIgnoreCase(this.orderStatus) || "CANCELLED".equalsIgnoreCase(this.orderStatus);
-    }
-
-    public boolean isCancellable() {
-        return !isTerminal();
-    }
-
-    public boolean canTransitionTo(OrderStatus target) {
-        OrderStatus current = getStatusEnum();
-        return current != null && current.canTransitionTo(target);
-    }
-
-    public boolean canTransitionTo(String targetStatus) {
-        try {
-            return canTransitionTo(OrderStatus.fromString(targetStatus));
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+        this.orderStatus = upper;
     }
 
     public void cancelOrder() {
-        if ("DELIVERED".equalsIgnoreCase(this.orderStatus)) {
+        if ("DELIVERED".equals(this.orderStatus)) {
             throw new IllegalStateException("Cannot cancel an order that has already been delivered.");
         }
-        if ("CANCELLED".equalsIgnoreCase(this.orderStatus)) {
-            throw new IllegalStateException("Order is already cancelled.");
-        }
-        this.orderStatus = OrderStatus.CANCELLED.name();
-    }
-
-    public int getTotalItemCount() {
-        int count = 0;
-        for (OrderItem item : orderItems) {
-            count += item.getQuantity();
-        }
-        return count;
-    }
-
-    @Transient
-    public boolean isOnlineOrder() {
-        return "ONLINE".equalsIgnoreCase(getFulfillmentType()) || (this instanceof OnlineOrder);
-    }
-
-    @Transient
-    public boolean isPickupOrder() {
-        return (this instanceof PickupOrder);
+        this.orderStatus = "CANCELLED";
     }
 
     public LocalDateTime getOrderDateTime() {
@@ -231,17 +173,6 @@ public abstract class FoodOrder {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive (> 0)");
         }
-
-        // If item already exists in this order, merge quantities
-        for (OrderItem existing : orderItems) {
-            if (existing.getFoodItem() != null && foodItem.getId() != null
-                    && foodItem.getId().equals(existing.getFoodItem().getId())) {
-                existing.setQuantity(existing.getQuantity() + quantity);
-                recalculateTotal();
-                return;
-            }
-        }
-
         OrderItem item = new OrderItem(this, foodItem, quantity);
         this.orderItems.add(item);
         recalculateTotal();
@@ -252,36 +183,6 @@ public abstract class FoodOrder {
             item.setOrder(null);
             recalculateTotal();
         }
-    }
-
-    public boolean removeOrderItemById(Long orderItemId) {
-        if (orderItemId == null) {
-            return false;
-        }
-        for (int i = 0; i < orderItems.size(); i++) {
-            OrderItem current = orderItems.get(i);
-            if (orderItemId.equals(current.getId())) {
-                current.setOrder(null);
-                orderItems.remove(i);
-                recalculateTotal();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean updateItemQuantity(Long orderItemId, int newQuantity) {
-        if (orderItemId == null || newQuantity <= 0) {
-            throw new IllegalArgumentException("Invalid order item id or non-positive quantity");
-        }
-        for (OrderItem current : orderItems) {
-            if (orderItemId.equals(current.getId())) {
-                current.setQuantity(newQuantity);
-                recalculateTotal();
-                return true;
-            }
-        }
-        return false;
     }
 
     public void recalculateTotal() {
@@ -308,7 +209,6 @@ public abstract class FoodOrder {
         this.payment = payment;
     }
 
-    @Transient
     public abstract String getFulfillmentType();
 
     @Override

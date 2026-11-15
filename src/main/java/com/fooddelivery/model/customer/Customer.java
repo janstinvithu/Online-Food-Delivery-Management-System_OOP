@@ -1,7 +1,7 @@
 package com.fooddelivery.model.customer;
 
+import com.fooddelivery.common.util.PersistentIds;
 import com.fooddelivery.model.order.FoodOrder;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -11,39 +11,26 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-@Entity
-@Table(name = "customers")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "customer_type", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("GUEST")
 public class Customer {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Customer full name is required")
-    @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
     @Email(message = "Email must be valid")
     @NotBlank(message = "Email is required")
-    @Column(name = "email", nullable = false, unique = true, length = 120)
     private String email;
 
     @NotBlank(message = "Phone number is required")
-    @Column(name = "phone", nullable = false, length = 25)
     private String phone;
 
-    @Column(name = "address", length = 255)
     private String address;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private final List<FoodOrder> orders = new ArrayList<>();
 
     public Customer() {
@@ -60,6 +47,16 @@ public class Customer {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
+    }
+
+    public void restoreCreatedAt(LocalDateTime createdAt) {
+        if (createdAt != null) {
+            this.createdAt = createdAt;
+        }
     }
 
     public String getFullName() {
@@ -127,12 +124,10 @@ public class Customer {
         }
     }
 
-    @Transient
     public boolean isRegisteredCustomer() {
         return false;
     }
 
-    @Transient
     public double getDiscountRate() {
         return 0.00;
     }

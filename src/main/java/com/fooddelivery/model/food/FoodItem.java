@@ -1,6 +1,6 @@
 package com.fooddelivery.model.food;
 
-import jakarta.persistence.*;
+import com.fooddelivery.common.util.PersistentIds;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -8,33 +8,22 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@Entity
-@Table(name = "food_items")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "item_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class FoodItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Food name must not be blank")
-    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "description", length = 255)
     private String description;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be strictly positive")
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "available", nullable = false)
     private boolean available = true;
 
     @Min(value = 1, message = "Preparation time must be at least 1 minute")
-    @Column(name = "preparation_time_minutes", nullable = false)
     private int preparationTimeMinutes;
 
     protected FoodItem() {
@@ -51,6 +40,10 @@ public abstract class FoodItem {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
     }
 
     public String getName() {
@@ -102,7 +95,6 @@ public abstract class FoodItem {
         this.preparationTimeMinutes = preparationTimeMinutes;
     }
 
-    @Transient
     public abstract String getFoodCategory();
 
     @Override

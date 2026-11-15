@@ -1,23 +1,30 @@
 package com.fooddelivery.repository;
 
+import com.fooddelivery.model.food.Beverage;
 import com.fooddelivery.model.food.FoodItem;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import com.fooddelivery.model.food.MainCourse;
 import java.util.List;
+import java.util.Optional;
 
-@Repository
-public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
+public interface FoodItemRepository {
+
+    List<FoodItem> findAll();
+
+    Optional<FoodItem> findById(Long id);
 
     List<FoodItem> findByAvailableTrue();
 
-    @Query("SELECT f FROM FoodItem f WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    List<FoodItem> searchByName(@Param("keyword") String keyword);
+    List<FoodItem> searchByName(String keyword);
 
-    @Query("SELECT f FROM FoodItem f WHERE TYPE(f) = com.fooddelivery.model.food.MainCourse")
-    List<FoodItem> findAllMainCourses();
+    List<MainCourse> findAllMainCourses();
 
-    @Query("SELECT f FROM FoodItem f WHERE TYPE(f) = com.fooddelivery.model.food.Beverage")
-    List<FoodItem> findAllBeverages();
+    List<Beverage> findAllBeverages();
+
+    <S extends FoodItem> S save(S foodItem);
+
+    <S extends FoodItem> List<S> saveAll(Iterable<S> foodItems);
+
+    void delete(FoodItem foodItem);
+
+    long count();
 }

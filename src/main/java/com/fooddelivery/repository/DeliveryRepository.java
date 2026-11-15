@@ -1,15 +1,18 @@
 package com.fooddelivery.repository;
 
 import com.fooddelivery.model.delivery.Delivery;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
+public interface DeliveryRepository {
+
+    List<Delivery> findAll();
+
+    Optional<Delivery> findById(Long id);
 
     Optional<Delivery> findByTrackingNumber(String trackingNumber);
 
     List<Delivery> findByDeliveryStatus(String deliveryStatus);
+
+    Delivery save(Delivery delivery);
 }
