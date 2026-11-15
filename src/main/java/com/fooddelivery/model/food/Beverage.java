@@ -1,33 +1,23 @@
 package com.fooddelivery.model.food;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "beverages")
-@DiscriminatorValue("BEVERAGE")
-@PrimaryKeyJoinColumn(name = "id")
 public class Beverage extends FoodItem {
 
     @NotBlank(message = "Volume size is required")
-    @Column(name = "volume_size", nullable = false, length = 30)
     private String volumeSize; // e.g. Small (250ml), Regular (350ml), Large (500ml)
 
     @Min(value = 1, message = "Volume ml must be positive")
-    @Column(name = "volume_ml", nullable = false)
     private int volumeMl;
 
-    @Column(name = "is_cold", nullable = false)
     private boolean cold;
 
     @Min(value = 0, message = "Caffeine content cannot be negative")
-    @Column(name = "caffeine_content_mg", nullable = false)
     private int caffeineContentMg;
 
     @NotBlank(message = "Sugar level is required")
-    @Column(name = "sugar_level", nullable = false, length = 20)
     private String sugarLevel; // ZERO, LOW, MEDIUM, HIGH
 
     public Beverage() {
@@ -106,7 +96,6 @@ public class Beverage extends FoodItem {
     }
 
     @Override
-    @Transient
     public String getFoodCategory() {
         return (cold ? "Chilled" : "Hot") + " Beverage (" + volumeSize + ")";
     }

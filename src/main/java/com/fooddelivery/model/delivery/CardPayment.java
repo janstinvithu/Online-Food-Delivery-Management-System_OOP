@@ -1,32 +1,23 @@
 package com.fooddelivery.model.delivery;
 
 import com.fooddelivery.model.order.FoodOrder;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "card_payments")
-@DiscriminatorValue("CARD")
-@PrimaryKeyJoinColumn(name = "id")
 public class CardPayment extends Payment {
 
     @NotBlank(message = "Card last four digits are required")
     @Pattern(regexp = "^\\d{4}$", message = "Card last four must be 4 numeric digits")
-    @Column(name = "card_last_four", nullable = false, length = 4)
     private String cardLastFour;
 
     @NotBlank(message = "Card type is required")
-    @Column(name = "card_type", nullable = false, length = 20)
     private String cardType;
 
     @NotBlank(message = "Authorization code is required")
-    @Column(name = "authorization_code", nullable = false, length = 50)
     private String authorizationCode;
 
     @NotBlank(message = "Gateway transaction ID is required")
-    @Column(name = "gateway_transaction_id", nullable = false, length = 100)
     private String gatewayTransactionId;
 
     public CardPayment() {
@@ -91,7 +82,6 @@ public class CardPayment extends Payment {
     }
 
     @Override
-    @Transient
     public String getPaymentDetails() {
         return cardType + " ending in •••• " + cardLastFour;
     }

@@ -1,28 +1,19 @@
 package com.fooddelivery.model.food;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "main_courses")
-@DiscriminatorValue("MAIN_COURSE")
-@PrimaryKeyJoinColumn(name = "id")
 public class MainCourse extends FoodItem {
 
     @NotBlank(message = "Cuisine type is required")
-    @Column(name = "cuisine_type", nullable = false, length = 50)
     private String cuisineType;
 
-    @Column(name = "is_vegetarian", nullable = false)
     private boolean vegetarian;
 
     @NotBlank(message = "Spice level is required")
-    @Column(name = "spice_level", nullable = false, length = 20)
     private String spiceLevel; // MILD, MEDIUM, HOT, EXTRA_HOT
 
     @NotBlank(message = "Serving portion is required")
-    @Column(name = "serving_portion", nullable = false, length = 100)
     private String servingPortion;
 
     public MainCourse() {
@@ -87,7 +78,6 @@ public class MainCourse extends FoodItem {
     }
 
     @Override
-    @Transient
     public String getFoodCategory() {
         return "Main Course (" + cuisineType + ")";
     }

@@ -1,7 +1,7 @@
 package com.fooddelivery.model.delivery;
 
+import com.fooddelivery.common.util.PersistentIds;
 import com.fooddelivery.model.order.FoodOrder;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,35 +10,23 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-@Entity
-@Table(name = "payments")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "payment_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class Payment {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "Order reference is required")
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
     private FoodOrder order;
 
     @NotNull(message = "Payment amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be strictly positive")
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     @NotBlank(message = "Payment status is required")
-    @Column(name = "payment_status", nullable = false, length = 30)
     private String paymentStatus; // PENDING, AUTHORIZED, COMPLETED, FAILED, REFUNDED
 
-    @Column(name = "payment_timestamp", nullable = false)
     private LocalDateTime paymentTimestamp;
 
     @NotBlank(message = "Transaction reference is required")
-    @Column(name = "transaction_reference", nullable = false, unique = true, length = 64)
     private String transactionReference;
 
     protected Payment() {
@@ -55,6 +43,10 @@ public abstract class Payment {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
     }
 
     public FoodOrder getOrder() {
@@ -112,7 +104,6 @@ public abstract class Payment {
         this.transactionReference = transactionReference.trim();
     }
 
-    @Transient
     public abstract String getPaymentDetails();
 
     @Override

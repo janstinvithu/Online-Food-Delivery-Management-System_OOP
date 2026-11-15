@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Addresses | Online Food Delivery System</title>
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+</head>
+<body>
+<div th:replace="~{layout/header :: header('orders')}"></div>
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">Saved addresses</h1>
+            <p style="color: var(--text-secondary);">Save an address, update it, or remove it before the next order.</p>
+        </div>
+        <a th:href="@{/orders/new}" class="btn btn-secondary">Order food</a>
+    </div>
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span><span th:text="${successMessage}">Saved.</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span><span th:text="${errorMessage}">Check the address.</span>
+    </div>
+    <form class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;" th:action="@{/orders/addresses}" method="post">
+        <h2 class="section-title" style="font-size: 1.2rem;">Add address</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="label">Label</label>
+                <input id="label" name="label" class="form-control" required maxlength="40" placeholder="Home">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="addressLine">Address</label>
+                <input id="addressLine" name="addressLine" class="form-control" required minlength="5" maxlength="255"
+                       placeholder="No. 42, Ward Place, Colombo 07">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save address</button>
+    </form>
+    <div class="card-container" th:each="address : ${addresses}" style="padding: 1.25rem; margin-bottom: 1rem;">
+        <form th:action="@{/orders/addresses}" method="post">
+            <input type="hidden" name="id" th:value="${address.id}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Label</label>
+                    <input name="label" class="form-control" required maxlength="40" th:value="${address.label}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <input name="addressLine" class="form-control" required minlength="5" maxlength="255" th:value="${address.addressLine}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Update address</button>
+        </form>
+        <form th:action="@{'/orders/addresses/' + ${address.id} + '/delete'}" method="post" style="margin-top: 0.75rem;"
+              onsubmit="return confirm('Remove this address?');">
+            <button type="submit" class="btn btn-danger btn-sm">Delete address</button>
+        </form>
+    </div>
+</main>
+<div th:replace="~{layout/footer :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

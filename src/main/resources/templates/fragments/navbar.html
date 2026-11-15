@@ -64,6 +64,11 @@
                     </a>
                 </li>
                 <li>
+                    <a th:href="@{/orders/addresses}" th:class="${activeTab == 'addresses' ? 'nav-link active' : 'nav-link'}">
+                        <span>📍</span> Addresses
+                    </a>
+                </li>
+                <li>
                     <a th:href="@{/customers/profile}" th:class="${activeTab == 'profile' ? 'nav-link active' : 'nav-link'}">
                         <span>⭐</span> My Profile &amp; Tier
                     </a>

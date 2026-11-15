@@ -1,12 +1,20 @@
 package com.fooddelivery.repository;
 
 import com.fooddelivery.model.delivery.DeliveryPerson;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
-@Repository
-public interface DeliveryPersonRepository extends JpaRepository<DeliveryPerson, Long> {
+public interface DeliveryPersonRepository {
+
+    List<DeliveryPerson> findAll();
+
+    Optional<DeliveryPerson> findById(Long id);
 
     List<DeliveryPerson> findByAvailableTrue();
+
+    DeliveryPerson save(DeliveryPerson deliveryPerson);
+
+    List<DeliveryPerson> saveAll(Iterable<DeliveryPerson> deliveryPersons);
+
+    void deleteById(Long id);
 }

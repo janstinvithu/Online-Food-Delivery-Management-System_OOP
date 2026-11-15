@@ -2,37 +2,28 @@ package com.fooddelivery.model.order;
 
 import com.fooddelivery.model.customer.Customer;
 import com.fooddelivery.model.delivery.Delivery;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "online_orders")
-@DiscriminatorValue("ONLINE")
-@PrimaryKeyJoinColumn(name = "id")
 public class OnlineOrder extends FoodOrder {
 
     @NotBlank(message = "Delivery address is required")
-    @Column(name = "delivery_address", nullable = false, length = 255)
     private String deliveryAddress;
 
-    @Column(name = "special_delivery_instructions", length = 255)
     private String specialDeliveryInstructions;
 
-    @Column(name = "estimated_delivery_time")
     private LocalDateTime estimatedDeliveryTime;
 
     @NotNull(message = "Delivery fee is required")
     @DecimalMin(value = "0.00", message = "Delivery fee cannot be negative")
-    @Column(name = "delivery_fee", nullable = false, precision = 10, scale = 2)
     private BigDecimal deliveryFee = new BigDecimal("350.00"); // Standard LKR delivery fee
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "delivery_id")
     private Delivery delivery;
+
+    private Long deliveryZoneId;
 
     public OnlineOrder() {
         super();
@@ -87,6 +78,14 @@ public class OnlineOrder extends FoodOrder {
         recalculateTotal();
     }
 
+    public Long getDeliveryZoneId() {
+        return deliveryZoneId;
+    }
+
+    public void setDeliveryZoneId(Long deliveryZoneId) {
+        this.deliveryZoneId = deliveryZoneId;
+    }
+
     public Delivery getDelivery() {
         return delivery;
     }
@@ -107,7 +106,6 @@ public class OnlineOrder extends FoodOrder {
     }
 
     @Override
-    @Transient
     public String getFulfillmentType() {
         return "Online Delivery to: " + deliveryAddress;
     }

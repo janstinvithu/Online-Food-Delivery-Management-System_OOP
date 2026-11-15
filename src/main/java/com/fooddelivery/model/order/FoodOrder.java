@@ -1,11 +1,11 @@
 package com.fooddelivery.model.order;
 
 import com.fooddelivery.common.util.OrderIdGenerator;
+import com.fooddelivery.common.util.PersistentIds;
 import com.fooddelivery.model.customer.Customer;
 import com.fooddelivery.model.customer.RegisteredCustomer;
 import com.fooddelivery.model.delivery.Payment;
 import com.fooddelivery.model.food.FoodItem;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,49 +16,33 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "food_orders")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "order_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class FoodOrder {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Order number is required")
-    @Column(name = "order_number", nullable = false, unique = true, length = 36)
     private String orderNumber;
 
     @NotBlank(message = "Order status is required")
-    @Column(name = "order_status", nullable = false, length = 30)
     private String orderStatus; // PENDING, PREPARING, READY, DELIVERED, CANCELLED
 
-    @Column(name = "order_date_time", nullable = false)
     private LocalDateTime orderDateTime;
 
     @NotNull(message = "Subtotal amount is required")
     @DecimalMin(value = "0.00", message = "Subtotal cannot be negative")
-    @Column(name = "subtotal_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotalAmount = BigDecimal.ZERO;
 
-    @Column(name = "discount_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.00", message = "Total amount cannot be negative")
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @NotNull(message = "Customer reference is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private final List<OrderItem> orderItems = new ArrayList<>();
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Payment payment;
 
     public FoodOrder() {
@@ -77,6 +61,23 @@ public abstract class FoodOrder {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
+    }
+
+    /**
+     * Reattaches a stored line without the availability check used for new orders.
+     */
+    public void restoreOrderItem(OrderItem item) {
+        if (item == null) {
+            throw new IllegalArgumentException("Order item cannot be null");
+        }
+        if (!orderItems.contains(item)) {
+            orderItems.add(item);
+            item.setOrder(this);
+        }
     }
 
     public String getOrderNumber() {
@@ -208,7 +209,6 @@ public abstract class FoodOrder {
         this.payment = payment;
     }
 
-    @Transient
     public abstract String getFulfillmentType();
 
     @Override

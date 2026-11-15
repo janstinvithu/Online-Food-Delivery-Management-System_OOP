@@ -1,6 +1,6 @@
 package com.fooddelivery.model.delivery;
 
-import jakarta.persistence.*;
+import com.fooddelivery.common.util.PersistentIds;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -10,39 +10,28 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "delivery_persons")
 public class DeliveryPerson {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Courier name is required")
-    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @NotBlank(message = "Phone number is required")
-    @Column(name = "phone", nullable = false, unique = true, length = 25)
     private String phone;
 
     @NotBlank(message = "Vehicle type is required")
-    @Column(name = "vehicle_type", nullable = false, length = 30)
     private String vehicleType;
 
     @NotBlank(message = "Vehicle plate number is required")
-    @Column(name = "vehicle_plate_number", nullable = false, length = 30)
     private String vehiclePlateNumber;
 
-    @Column(name = "is_available", nullable = false)
     private boolean available = true;
 
     @DecimalMin(value = "1.00", message = "Minimum rating is 1.00")
     @DecimalMax(value = "5.00", message = "Maximum rating is 5.00")
-    @Column(name = "rating", nullable = false, precision = 3, scale = 2)
     private BigDecimal rating = new BigDecimal("5.00");
 
-    @OneToMany(mappedBy = "deliveryPerson", fetch = FetchType.LAZY)
     private final List<Delivery> deliveries = new ArrayList<>();
 
     public DeliveryPerson() {
@@ -59,6 +48,16 @@ public class DeliveryPerson {
 
     public Long getId() {
         return id;
+    }
+
+    public void assignPersistentId(Long persistentId) {
+        this.id = PersistentIds.assign(this.id, persistentId);
+    }
+
+    public void restoreDelivery(Delivery delivery) {
+        if (delivery != null && !deliveries.contains(delivery)) {
+            deliveries.add(delivery);
+        }
     }
 
     public String getName() {
@@ -105,7 +104,6 @@ public class DeliveryPerson {
         this.vehiclePlateNumber = vehiclePlateNumber.trim();
     }
 
-    @Transient
     public String getVehicleDetails() {
         return vehicleType + " (" + vehiclePlateNumber + ")";
     }

@@ -40,6 +40,10 @@
     </div>
 
     <!-- Error Alert Banner -->
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Status updated.</span>
+    </div>
     <div th:if="${errorMessage != null or param.error != null}" class="alert-error">
         <span>⚠️</span>
         <span th:text="${errorMessage != null ? errorMessage : param.error}">Status transition error occurred.</span>
@@ -73,12 +77,8 @@
                 <div class="form-group" style="flex: 1; min-width: 240px; margin-bottom: 0;">
                     <label class="form-label">Transition Order Status</label>
                     <select name="status" class="form-control" th:disabled="${order.orderStatus == 'CANCELLED' or order.orderStatus == 'DELIVERED'}" required>
-                        <option value="PENDING" th:selected="${order.orderStatus == 'PENDING'}">PENDING</option>
-                        <option value="CONFIRMED" th:selected="${order.orderStatus == 'CONFIRMED'}">CONFIRMED</option>
-                        <option value="PREPARING" th:selected="${order.orderStatus == 'PREPARING'}">PREPARING</option>
-                        <option value="READY" th:selected="${order.orderStatus == 'READY'}">READY</option>
-                        <option value="OUT_FOR_DELIVERY" th:selected="${order.orderStatus == 'OUT_FOR_DELIVERY'}">OUT_FOR_DELIVERY</option>
-                        <option value="DELIVERED" th:selected="${order.orderStatus == 'DELIVERED'}">DELIVERED</option>
+                        <option th:each="choice : ${statusChoices}" th:value="${choice}"
+                                th:selected="${choice == order.orderStatus}" th:text="${choice}">PENDING</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="height: 44px;" 
@@ -92,6 +92,12 @@
                   onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be reversed.');">
                 <button type="submit" class="btn btn-danger" style="height: 44px;">Cancel Order</button>
             </form>
+            <form th:if="${canArchive}" th:action="@{'/orders/edit/' + ${order.id} + '/archive'}" method="post"
+                  onsubmit="return confirm('Archive this unsubmitted order? It will leave the active list and stay in the archive.');">
+                <button type="submit" class="btn btn-secondary" style="height: 44px;">Archive invalid order</button>
+            </form>
+            <button th:unless="${canArchive}" type="button" class="btn btn-secondary" style="height: 44px;" disabled
+                    title="Paid, preparing, and completed orders stay in the active history.">Archive invalid order</button>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
@@ -144,6 +150,7 @@
             </tbody>
         </table>
     </div>
+    <div th:replace="~{order/feedback-panel :: feedback(${order}, ${complaints}, ${review}, ${canComplain}, ${canReview})}"></div>
 </main>
 
 <div th:replace="~{layout/footer :: footer}"></div>

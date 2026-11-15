@@ -33,7 +33,53 @@
         <a th:href="@{/orders/new}" class="btn btn-primary">+ Place New Order</a>
     </div>
 
-    <div th:if="${#lists.isEmpty(orders)}" class="card-container" style="text-align: center; padding: 3rem;">
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Order updated.</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Order could not be changed.</span>
+    </div>
+
+    <form th:action="@{/orders}" method="get" class="card-container" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0; min-width: 200px; flex: 1;">
+            <label class="form-label" for="orderNumberSearch">Order number</label>
+            <input id="orderNumberSearch" name="orderNumber" class="form-control" th:value="${orderNumber}" placeholder="e.g. ORD-20261018-1001">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; min-width: 160px;">
+            <label class="form-label" for="statusFilter">Status</label>
+            <select id="statusFilter" name="status" class="form-control">
+                <option value="">All statuses</option>
+                <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+                <option value="CONFIRMED" th:selected="${status == 'CONFIRMED'}">CONFIRMED</option>
+                <option value="PREPARING" th:selected="${status == 'PREPARING'}">PREPARING</option>
+                <option value="READY" th:selected="${status == 'READY'}">READY</option>
+                <option value="OUT_FOR_DELIVERY" th:selected="${status == 'OUT_FOR_DELIVERY'}">OUT_FOR_DELIVERY</option>
+                <option value="DELIVERED" th:selected="${status == 'DELIVERED'}">DELIVERED</option>
+                <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">CANCELLED</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+            <label class="form-label" for="typeFilter">Order type</label>
+            <select id="typeFilter" name="type" class="form-control">
+                <option value="">All types</option>
+                <option value="ONLINE" th:selected="${type == 'ONLINE'}">Online delivery</option>
+                <option value="PICKUP" th:selected="${type == 'PICKUP'}">Pickup</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a th:href="@{/orders}" class="btn btn-secondary">Clear</a>
+    </form>
+
+    <div th:if="${#lists.isEmpty(orders) and filtered}" class="card-container" style="text-align: center; padding: 3rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+        <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No matching orders</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try another order number, status, or order type.</p>
+        <a th:href="@{/orders}" class="btn btn-secondary">Clear search</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(orders) and !filtered}" class="card-container" style="text-align: center; padding: 3rem;">
         <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
         <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No Orders Found</h3>
         <p style="color: var(--text-muted); margin-bottom: 1.5rem;">There are currently no food orders placed in the system.</p>

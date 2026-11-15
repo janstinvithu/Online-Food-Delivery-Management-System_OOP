@@ -1,0 +1,544 @@
+{
+  "schemaVersion" : 1,
+  "sequences" : {
+    "customerId" : 5,
+    "foodItemId" : 7,
+    "orderId" : 10,
+    "orderItemId" : 15,
+    "deliveryId" : 7,
+    "deliveryPersonId" : 4,
+    "paymentId" : 4,
+    "complaintId" : 5,
+    "reviewId" : 3,
+    "savedAddressId" : 1,
+    "deliveryZoneId" : 4,
+    "courierShiftId" : 1,
+    "checkpointId" : 1,
+    "refundId" : 1
+  },
+  "customers" : [ {
+    "id" : 1,
+    "type" : "REGISTERED",
+    "fullName" : "Eleanor Fernando",
+    "email" : "eleanor.fernando@vanguard.lk",
+    "phone" : "+94-77-1234567",
+    "address" : "No. 42, Ward Place, Colombo 07",
+    "createdAt" : "2026-01-10T10:15:00",
+    "loyaltyPoints" : 1200,
+    "membershipTier" : "PLATINUM",
+    "passwordHash" : "$2a$12$securehashLK1",
+    "preferredPaymentMethod" : "CARD"
+  }, {
+    "id" : 2,
+    "type" : "REGISTERED",
+    "fullName" : "Marcus Perera",
+    "email" : "marcus.perera@kandytech.lk",
+    "phone" : "+94-71-9876543",
+    "address" : "No. 18, Peradeniya Road, Kandy",
+    "createdAt" : "2026-02-14T14:30:00",
+    "loyaltyPoints" : 650,
+    "membershipTier" : "GOLD",
+    "passwordHash" : "$2a$12$securehashLK2",
+    "preferredPaymentMethod" : "CASH"
+  }, {
+    "id" : 3,
+    "type" : "GUEST",
+    "fullName" : "Sophia De Silva",
+    "email" : "sophia.desilva@gmail.com",
+    "phone" : "+94-76-5551234",
+    "address" : "No. 10, Church Street, Galle Fort",
+    "createdAt" : "2026-03-01T18:20:00"
+  }, {
+    "id" : 4,
+    "type" : "REGISTERED",
+    "fullName" : "David Jayawardena",
+    "email" : "david.j@jaffnadigital.lk",
+    "phone" : "+94-77-4448899",
+    "address" : "No. 88, Hospital Road, Jaffna",
+    "createdAt" : "2026-03-12T11:45:00",
+    "loyaltyPoints" : 250,
+    "membershipTier" : "SILVER",
+    "passwordHash" : "$2a$12$securehashLK3",
+    "preferredPaymentMethod" : "CARD"
+  }, {
+    "id" : 5,
+    "type" : "REGISTERED",
+    "fullName" : "vithu",
+    "email" : "vithu@gmail.com",
+    "phone" : "+94 760007486",
+    "address" : "vuth home",
+    "createdAt" : "2026-11-15T12:42:56.2791365",
+    "loyaltyPoints" : 0,
+    "membershipTier" : "BRONZE",
+    "passwordHash" : "password123",
+    "preferredPaymentMethod" : "CARD"
+  } ],
+  "foodItems" : [ {
+    "id" : 1,
+    "type" : "MAIN_COURSE",
+    "name" : "Chicken Dum Biryani Special",
+    "description" : "Fragrant kaima basmati rice steamed with marinated chicken leg, boiled egg, mint sambol, and raita",
+    "price" : 1850.00,
+    "available" : true,
+    "preparationTimeMinutes" : 25,
+    "cuisineType" : "Sri Lankan Dum",
+    "vegetarian" : false,
+    "spiceLevel" : "MEDIUM",
+    "servingPortion" : "Full Clay Pot with Hard-boiled Egg & Gravy"
+  }, {
+    "id" : 2,
+    "type" : "MAIN_COURSE",
+    "name" : "Jaffna Spiced Mutton Kottu",
+    "description" : "Hand-shredded godamba roti stir-fried with roasted tender mutton, leeks, green chillies, and Jaffna curry gravy",
+    "price" : 2250.00,
+    "available" : true,
+    "preparationTimeMinutes" : 20,
+    "cuisineType" : "Northern Sri Lankan",
+    "vegetarian" : false,
+    "spiceLevel" : "EXTRA_HOT",
+    "servingPortion" : "Large Plate (500g) with Extra Spicy Curry Dip"
+  }, {
+    "id" : 3,
+    "type" : "MAIN_COURSE",
+    "name" : "Negombo Lagoon Prawn Curry",
+    "description" : "Succulent fresh lagoon prawns slow-cooked in thick coconut milk, roasted curry powder, and wild goraka",
+    "price" : 2400.00,
+    "available" : true,
+    "preparationTimeMinutes" : 30,
+    "cuisineType" : "Coastal Sri Lankan",
+    "vegetarian" : false,
+    "spiceLevel" : "HOT",
+    "servingPortion" : "350g Rich Seafood Pot with 2 Roast Paan slices"
+  }, {
+    "id" : 4,
+    "type" : "MAIN_COURSE",
+    "name" : "Vegetable Wok Fried Rice",
+    "description" : "Aromatic jasmine rice tossed with crispy garden vegetables, golden cashews, accompanied by authentic hot chilli paste",
+    "price" : 1350.00,
+    "available" : true,
+    "preparationTimeMinutes" : 15,
+    "cuisineType" : "Sri Lankan Fusion",
+    "vegetarian" : true,
+    "spiceLevel" : "MEDIUM",
+    "servingPortion" : "Standard Bowl (400g) with Katta Sambol & Chilli Paste"
+  }, {
+    "id" : 5,
+    "type" : "BEVERAGE",
+    "name" : "Ceylon Nuwara Eliya Pekoe Tea",
+    "description" : "Pure Ceylon single-estate high-grown orange pekoe brewed fresh and served with jaggery and fresh milk",
+    "price" : 450.00,
+    "available" : true,
+    "preparationTimeMinutes" : 5,
+    "volumeSize" : "Single Tea Pot (350ml)",
+    "volumeMl" : 350,
+    "cold" : false,
+    "caffeineContentMg" : 65,
+    "sugarLevel" : "LOW"
+  }, {
+    "id" : 6,
+    "type" : "BEVERAGE",
+    "name" : "Colombo Royal Faluda",
+    "description" : "Creamy chilled milk layered with fragrant rose syrup, soaked basil seeds, vermicelli, jelly cubes, and rich vanilla ice cream",
+    "price" : 650.00,
+    "available" : true,
+    "preparationTimeMinutes" : 8,
+    "volumeSize" : "Tall Sundae Glass (400ml)",
+    "volumeMl" : 400,
+    "cold" : true,
+    "caffeineContentMg" : 0,
+    "sugarLevel" : "HIGH"
+  }, {
+    "id" : 7,
+    "type" : "BEVERAGE",
+    "name" : "Fresh King Coconut (Thambili)",
+    "description" : "Naturally sweet, mineral-rich chilled organic king coconut water cut fresh on order",
+    "price" : 350.00,
+    "available" : true,
+    "preparationTimeMinutes" : 3,
+    "volumeSize" : "Fresh Nut Serving (450ml)",
+    "volumeMl" : 450,
+    "cold" : true,
+    "caffeineContentMg" : 0,
+    "sugarLevel" : "ZERO"
+  } ],
+  "orders" : [ {
+    "id" : 1,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261018-1001",
+    "orderStatus" : "PREPARING",
+    "orderDateTime" : "2026-10-18T12:30:00",
+    "subtotalAmount" : 2300.00,
+    "discountAmount" : 345.00,
+    "totalAmount" : 2305.00,
+    "customerId" : 1,
+    "items" : [ {
+      "id" : 1,
+      "foodItemId" : 1,
+      "quantity" : 1,
+      "unitPrice" : 1850.00,
+      "subtotal" : 1850.00
+    }, {
+      "id" : 2,
+      "foodItemId" : 5,
+      "quantity" : 1,
+      "unitPrice" : 450.00,
+      "subtotal" : 450.00
+    } ],
+    "deliveryAddress" : "No. 42, Ward Place, Colombo 07",
+    "specialDeliveryInstructions" : "Security gate pass code #4401, deliver to 3rd floor apartment",
+    "estimatedDeliveryTime" : "2026-10-18T13:15:00",
+    "deliveryFee" : 350.00,
+    "deliveryId" : 1
+  }, {
+    "id" : 2,
+    "type" : "PICKUP",
+    "orderNumber" : "ORD-20261018-1002",
+    "orderStatus" : "READY",
+    "orderDateTime" : "2026-10-18T12:35:00",
+    "subtotalAmount" : 2900.00,
+    "discountAmount" : 290.00,
+    "totalAmount" : 2610.00,
+    "customerId" : 2,
+    "items" : [ {
+      "id" : 3,
+      "foodItemId" : 2,
+      "quantity" : 1,
+      "unitPrice" : 2250.00,
+      "subtotal" : 2250.00
+    }, {
+      "id" : 4,
+      "foodItemId" : 6,
+      "quantity" : 1,
+      "unitPrice" : 650.00,
+      "subtotal" : 650.00
+    } ],
+    "pickupTimeSlot" : "01:00 PM - 01:20 PM",
+    "pickupWindowMinutes" : 20,
+    "counterNumber" : 2,
+    "pickupContactPhone" : "+94-71-9876543",
+    "curbsidePickup" : false
+  }, {
+    "id" : 3,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261018-1003",
+    "orderStatus" : "DELIVERED",
+    "orderDateTime" : "2026-10-18T11:05:00",
+    "subtotalAmount" : 2750.00,
+    "discountAmount" : 0,
+    "totalAmount" : 3100.00,
+    "customerId" : 3,
+    "items" : [ {
+      "id" : 5,
+      "foodItemId" : 3,
+      "quantity" : 1,
+      "unitPrice" : 2400.00,
+      "subtotal" : 2400.00
+    }, {
+      "id" : 6,
+      "foodItemId" : 7,
+      "quantity" : 1,
+      "unitPrice" : 350.00,
+      "subtotal" : 350.00
+    } ],
+    "deliveryAddress" : "No. 10, Church Street, Galle Fort",
+    "specialDeliveryInstructions" : "Leave at main reception of Dutch Villa",
+    "estimatedDeliveryTime" : "2026-10-18T11:55:00",
+    "deliveryFee" : 350.00,
+    "deliveryId" : 2
+  }, {
+    "id" : 4,
+    "type" : "PICKUP",
+    "orderNumber" : "ORD-20261018-1004",
+    "orderStatus" : "PENDING",
+    "orderDateTime" : "2026-10-18T13:00:00",
+    "subtotalAmount" : 2000.00,
+    "discountAmount" : 100.00,
+    "totalAmount" : 1900.00,
+    "customerId" : 4,
+    "items" : [ {
+      "id" : 7,
+      "foodItemId" : 4,
+      "quantity" : 1,
+      "unitPrice" : 1350.00,
+      "subtotal" : 1350.00
+    }, {
+      "id" : 8,
+      "foodItemId" : 6,
+      "quantity" : 1,
+      "unitPrice" : 650.00,
+      "subtotal" : 650.00
+    } ],
+    "pickupTimeSlot" : "01:45 PM - 02:00 PM",
+    "pickupWindowMinutes" : 15,
+    "counterNumber" : 1,
+    "pickupContactPhone" : "+94-77-4448899",
+    "curbsidePickup" : true
+  }, {
+    "id" : 6,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261115-2079",
+    "orderStatus" : "CANCELLED",
+    "orderDateTime" : "2026-11-15T12:43:56.6868949",
+    "subtotalAmount" : 1850.00,
+    "discountAmount" : 0.00,
+    "totalAmount" : 2200.00,
+    "customerId" : 5,
+    "items" : [ {
+      "id" : 10,
+      "foodItemId" : 1,
+      "quantity" : 1,
+      "unitPrice" : 1850.00,
+      "subtotal" : 1850.00
+    } ],
+    "deliveryAddress" : "vuth home",
+    "specialDeliveryInstructions" : "",
+    "estimatedDeliveryTime" : "2026-11-15T13:28:56.6868949",
+    "deliveryFee" : 350.00,
+    "deliveryId" : 4
+  }, {
+    "id" : 9,
+    "type" : "PICKUP",
+    "orderNumber" : "ORD-20261115-3285",
+    "orderStatus" : "PENDING",
+    "orderDateTime" : "2026-11-15T13:21:17.4819619",
+    "subtotalAmount" : 350.00,
+    "discountAmount" : 0.00,
+    "totalAmount" : 350.00,
+    "customerId" : 5,
+    "items" : [ {
+      "id" : 14,
+      "foodItemId" : 7,
+      "quantity" : 1,
+      "unitPrice" : 350.00,
+      "subtotal" : 350.00
+    } ],
+    "pickupTimeSlot" : "122-45 -1250",
+    "pickupWindowMinutes" : 15,
+    "counterNumber" : 1,
+    "pickupContactPhone" : "+94 760007486",
+    "curbsidePickup" : false
+  }, {
+    "id" : 10,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261115-9052",
+    "orderStatus" : "CANCELLED",
+    "orderDateTime" : "2026-11-15T13:37:04.7961782",
+    "subtotalAmount" : 350.00,
+    "discountAmount" : 0.00,
+    "totalAmount" : 700.00,
+    "customerId" : 5,
+    "items" : [ {
+      "id" : 15,
+      "foodItemId" : 7,
+      "quantity" : 1,
+      "unitPrice" : 350.00,
+      "subtotal" : 350.00
+    } ],
+    "deliveryAddress" : "vuth home",
+    "specialDeliveryInstructions" : "ffgg",
+    "estimatedDeliveryTime" : "2026-11-15T14:22:04.7961782",
+    "deliveryFee" : 350.00,
+    "deliveryId" : 7,
+    "deliveryZoneId" : 1
+  } ],
+  "deliveries" : [ {
+    "id" : 1,
+    "trackingNumber" : "TRK-COL-2026-0001",
+    "deliveryStatus" : "OUT_FOR_DELIVERY",
+    "departureTime" : "2026-10-18T12:45:00",
+    "deliveryPersonId" : 1,
+    "onlineOrderId" : 1
+  }, {
+    "id" : 2,
+    "trackingNumber" : "TRK-GAL-2026-0002",
+    "deliveryStatus" : "DELIVERED",
+    "departureTime" : "2026-10-18T11:20:00",
+    "deliveredTime" : "2026-10-18T11:55:00",
+    "deliveryPersonId" : 3,
+    "onlineOrderId" : 3
+  }, {
+    "id" : 4,
+    "trackingNumber" : "TRK-194A435E",
+    "deliveryStatus" : "PENDING_ASSIGNMENT",
+    "onlineOrderId" : 6
+  }, {
+    "id" : 7,
+    "trackingNumber" : "TRK-FE90EE03",
+    "deliveryStatus" : "PENDING_ASSIGNMENT",
+    "onlineOrderId" : 10
+  } ],
+  "deliveryPersons" : [ {
+    "id" : 1,
+    "name" : "Kasun Bandara",
+    "phone" : "+94-77-8811223",
+    "vehicleType" : "Honda Dio Scooter",
+    "vehiclePlateNumber" : "WP BDF-4491",
+    "available" : false,
+    "rating" : 4.95
+  }, {
+    "id" : 2,
+    "name" : "Nuwan Pradeep",
+    "phone" : "+94-71-3344556",
+    "vehicleType" : "TVS King Three-Wheeler",
+    "vehiclePlateNumber" : "WP QL-1892",
+    "available" : true,
+    "rating" : 4.88
+  }, {
+    "id" : 3,
+    "name" : "Dinuka Silva",
+    "phone" : "+94-76-2233445",
+    "vehicleType" : "Hero Eco 125 Motorcycle",
+    "vehiclePlateNumber" : "SP BD-8821",
+    "available" : true,
+    "rating" : 4.90
+  } ],
+  "payments" : [ {
+    "id" : 1,
+    "type" : "CARD",
+    "orderId" : 1,
+    "amount" : 2305.00,
+    "paymentStatus" : "AUTHORIZED",
+    "paymentTimestamp" : "2026-10-18T12:31:10",
+    "transactionReference" : "TXN-CARD-LK9901",
+    "cardLastFour" : "4242",
+    "cardType" : "VISA",
+    "authorizationCode" : "AUTH-LK-94021",
+    "gatewayTransactionId" : "pay_lk_1NpZ3uLkdIwHuV8K70"
+  }, {
+    "id" : 2,
+    "type" : "CASH",
+    "orderId" : 2,
+    "amount" : 2610.00,
+    "paymentStatus" : "PENDING",
+    "paymentTimestamp" : "2026-10-18T12:35:40",
+    "transactionReference" : "TXN-CASH-LK7710",
+    "amountTendered" : 3000.00,
+    "changeDue" : 390.00
+  }, {
+    "id" : 3,
+    "type" : "CARD",
+    "orderId" : 3,
+    "amount" : 3100.00,
+    "paymentStatus" : "COMPLETED",
+    "paymentTimestamp" : "2026-10-18T11:06:15",
+    "transactionReference" : "TXN-CARD-LK8831",
+    "cardLastFour" : "8819",
+    "cardType" : "MASTERCARD",
+    "authorizationCode" : "AUTH-LK-33901",
+    "gatewayTransactionId" : "pay_lk_2KqM8vPleJxKqL9W12"
+  }, {
+    "id" : 4,
+    "type" : "CARD",
+    "orderId" : 4,
+    "amount" : 1900.00,
+    "paymentStatus" : "AUTHORIZED",
+    "paymentTimestamp" : "2026-10-18T13:00:55",
+    "transactionReference" : "TXN-CARD-LK6629",
+    "cardLastFour" : "1104",
+    "cardType" : "AMEX",
+    "authorizationCode" : "AUTH-LK-77148",
+    "gatewayTransactionId" : "pay_lk_3LtX9wQmeLyNrM0X34"
+  } ],
+  "archivedOrders" : [ {
+    "id" : 5,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261115-7458",
+    "orderStatus" : "PENDING",
+    "orderDateTime" : "2026-11-15T11:55:12.2669014",
+    "subtotalAmount" : 1850.00,
+    "discountAmount" : 0,
+    "totalAmount" : 2200.00,
+    "customerId" : 3,
+    "items" : [ {
+      "id" : 9,
+      "foodItemId" : 1,
+      "quantity" : 1,
+      "unitPrice" : 1850.00,
+      "subtotal" : 1850.00
+    } ],
+    "deliveryAddress" : "No. 10, Church Street, Galle Fort",
+    "specialDeliveryInstructions" : "Archive me",
+    "estimatedDeliveryTime" : "2026-11-15T12:40:12.2669014",
+    "deliveryFee" : 350.00
+  }, {
+    "id" : 7,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261115-1193",
+    "orderStatus" : "PENDING",
+    "orderDateTime" : "2026-11-15T12:44:40.90711",
+    "subtotalAmount" : 2750.00,
+    "discountAmount" : 0,
+    "totalAmount" : 3100.00,
+    "customerId" : 3,
+    "items" : [ {
+      "id" : 11,
+      "foodItemId" : 1,
+      "quantity" : 1,
+      "unitPrice" : 1850.00,
+      "subtotal" : 1850.00
+    }, {
+      "id" : 12,
+      "foodItemId" : 5,
+      "quantity" : 2,
+      "unitPrice" : 450.00,
+      "subtotal" : 900.00
+    } ],
+    "deliveryAddress" : "No. 10, Church Street, Galle Fort",
+    "specialDeliveryInstructions" : "finish-check",
+    "estimatedDeliveryTime" : "2026-11-15T13:29:40.90711",
+    "deliveryFee" : 350.00
+  }, {
+    "id" : 8,
+    "type" : "ONLINE",
+    "orderNumber" : "ORD-20261115-8416",
+    "orderStatus" : "PENDING",
+    "orderDateTime" : "2026-11-15T13:10:48.8522847",
+    "subtotalAmount" : 1850.00,
+    "discountAmount" : 0,
+    "totalAmount" : 2200.00,
+    "customerId" : 3,
+    "items" : [ {
+      "id" : 13,
+      "foodItemId" : 1,
+      "quantity" : 1,
+      "unitPrice" : 1850.00,
+      "subtotal" : 1850.00
+    } ],
+    "deliveryAddress" : "No. 15, Test Lane, Galle",
+    "estimatedDeliveryTime" : "2026-11-15T13:55:48.8522847",
+    "deliveryFee" : 350.00
+  } ],
+  "complaints" : [ {
+    "id" : 4,
+    "orderId" : 6,
+    "customerId" : 5,
+    "message" : "hi",
+    "status" : "RESOLVED",
+    "createdAt" : "2026-11-15T14:01:57.5792352"
+  } ],
+  "reviews" : [ {
+    "id" : 3,
+    "orderId" : 6,
+    "customerId" : 5,
+    "rating" : 5,
+    "comment" : "nice",
+    "createdAt" : "2026-11-15T14:06:05.6881344"
+  } ],
+  "savedAddresses" : [ ],
+  "deliveryZones" : [ {
+    "id" : 1,
+    "areaName" : "Colombo 07",
+    "fee" : 350.00
+  }, {
+    "id" : 2,
+    "areaName" : "Galle Fort",
+    "fee" : 450.00
+  }, {
+    "id" : 3,
+    "areaName" : "Jaffna Town",
+    "fee" : 550.00
+  } ],
+  "courierShifts" : [ ],
+  "deliveryCheckpoints" : [ ],
+  "refunds" : [ ]
+}

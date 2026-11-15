@@ -1,25 +1,18 @@
 package com.fooddelivery.model.customer;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-@Entity
-@DiscriminatorValue("REGISTERED")
 public class RegisteredCustomer extends Customer {
 
     @Min(value = 0, message = "Loyalty points cannot be negative")
-    @Column(name = "loyalty_points")
     private int loyaltyPoints;
 
-    @Column(name = "membership_tier", length = 20)
     private String membershipTier; // BRONZE, SILVER, GOLD, PLATINUM
 
-    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
-    @Column(name = "preferred_payment_method", length = 50)
     private String preferredPaymentMethod;
 
     public RegisteredCustomer() {
@@ -94,13 +87,11 @@ public class RegisteredCustomer extends Customer {
     }
 
     @Override
-    @Transient
     public boolean isRegisteredCustomer() {
         return true;
     }
 
     @Override
-    @Transient
     public double getDiscountRate() {
         if ("PLATINUM".equalsIgnoreCase(membershipTier)) {
             return 0.15;

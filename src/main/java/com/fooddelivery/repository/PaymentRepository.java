@@ -1,14 +1,20 @@
 package com.fooddelivery.repository;
 
 import com.fooddelivery.model.delivery.Payment;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
+public interface PaymentRepository {
+
+    List<Payment> findAll();
+
+    Optional<Payment> findById(Long id);
 
     Optional<Payment> findByTransactionReference(String transactionReference);
 
     Optional<Payment> findByOrderId(Long orderId);
+
+    <S extends Payment> S save(S payment);
+
+    void deleteByOrderId(Long orderId);
 }

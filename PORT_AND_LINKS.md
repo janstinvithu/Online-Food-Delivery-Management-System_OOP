@@ -10,7 +10,7 @@ Equipped with clean Spring session-based role enforcement via `AuthInterceptor` 
 | Role | Name | Email | Password | Access / Tier Details |
 | :--- | :--- | :--- | :--- | :--- |
 | **ADMIN** | System Administrator | `admin@foodflow.lk` | `admin123` | Full Audit, Food CRUD, Fleet Dispatch, Statuses |
-| **CUSTOMER** | Eleanor Fernando | `eleanor.fernando@vanguard.lk` | `password123` | **Platinum Tier** &bull; 1,200 pts &bull; **10% Auto Discount** |
+| **CUSTOMER** | Eleanor Fernando | `eleanor.fernando@vanguard.lk` | `password123` | **Platinum Tier** &bull; 1,200 pts &bull; **15% Auto Discount** |
 | **CUSTOMER** | Marcus Perera | `marcus.perera@kandytech.lk` | `password123` | **Gold Tier** &bull; 650 pts &bull; **10% Auto Discount** |
 | **CUSTOMER** | David Jayawardena | `david.j@jaffnadigital.lk` | `password123` | **Silver Tier** &bull; 250 pts &bull; 5% Auto Discount |
 | **CUSTOMER** | Sophia De Silva | `sophia.desilva@gmail.com` | `password123` | Guest Checkout Account &bull; Galle Fort |
@@ -31,9 +31,11 @@ Equipped with clean Spring session-based role enforcement via `AuthInterceptor` 
 | Route | Link | Description |
 | :--- | :--- | :--- |
 | **My Orders** | [http://localhost:8080/orders/my-orders](http://localhost:8080/orders/my-orders) | Order history, real-time rider tracking, and financial breakdown |
-| **Place Food Order** | [http://localhost:8080/orders/new](http://localhost:8080/orders/new) | Order Online Delivery or Pickup with automatic tier discount |
+| **Order Details** | [http://localhost:8080/orders/my-orders/4](http://localhost:8080/orders/my-orders/4) | View one order, place or change its review, and edit a pending order |
+| **Place Food Order** | [http://localhost:8080/orders/new](http://localhost:8080/orders/new) | Food cards, delivery zone, saved address, then Online Delivery or Pickup |
+| **Saved Addresses** | [http://localhost:8080/orders/addresses](http://localhost:8080/orders/addresses) | Create, update, and delete a customer's delivery address |
 | **Customer Profile** | [http://localhost:8080/customers/profile](http://localhost:8080/customers/profile) | View Loyalty Tier (Bronze/Silver/Gold/Platinum) and update address |
-| **Checkout & Settle** | [http://localhost:8080/payments/checkout/1](http://localhost:8080/payments/checkout/1) | Settle order with Cash on delivery or Card in Sri Lankan Rupee (LKR) |
+| **Checkout & Settle** | [http://localhost:8080/payments/checkout/1](http://localhost:8080/payments/checkout/1) | Settle with cash or card, update the payment, request a refund, and save a payment method |
 
 ### 3. Admin Scope (Requires `'ADMIN'` Role)
 | Route | Link | Description |
@@ -42,40 +44,21 @@ Equipped with clean Spring session-based role enforcement via `AuthInterceptor` 
 | **Food Menu Catalog** | [http://localhost:8080/foods](http://localhost:8080/foods) | Food catalog, search, stock availability, and prices in LKR |
 | **Add Food Item** | [http://localhost:8080/foods/new](http://localhost:8080/foods/new) | Create `MainCourse` (spiceLevel) or `Beverage` (volumeSize) |
 | **Customer Audit Directory** | [http://localhost:8080/customers](http://localhost:8080/customers) | Full customer audit registry with Sri Lankan addresses and loyalty tiers |
-| **Order Management Logs** | [http://localhost:8080/orders](http://localhost:8080/orders) | View all active orders, fulfillment types, and payment states |
-| **Order Status Update** | [http://localhost:8080/orders/edit/1](http://localhost:8080/orders/edit/1) | Lifecycle status updater (`PREPARING`, `READY`, `DELIVERED`, `CANCELLED`) |
+| **Order Management Logs** | [http://localhost:8080/orders](http://localhost:8080/orders) | View, search, and filter all active orders |
+| **Order Status Update** | [http://localhost:8080/orders/edit/1](http://localhost:8080/orders/edit/1) | Update order status, and view, reply to, update, or delete the customer's review |
 | **Delivery Dispatch Board** | [http://localhost:8080/deliveries](http://localhost:8080/deliveries) | Active courier fleet status, tracking numbers, and live shipments |
 | **Assign Delivery Courier** | [http://localhost:8080/deliveries/new](http://localhost:8080/deliveries/new) | Assign available fleet riders to pending online orders |
-| **Payment Auditing** | [http://localhost:8080/payments/1](http://localhost:8080/payments/1) | Inspect polymorphic cash tender & change due / card authorization |
+| **Courier Fleet** | [http://localhost:8080/deliveries/couriers](http://localhost:8080/deliveries/couriers) | Create, view, update, and delete delivery couriers. Edit a courier to manage shifts |
+| **Delivery Zones** | [http://localhost:8080/deliveries/zones](http://localhost:8080/deliveries/zones) | Create, view, update, and delete an area and its delivery fee |
+| **Delivery Checkpoints** | [http://localhost:8080/deliveries/1/checkpoints](http://localhost:8080/deliveries/1/checkpoints) | Add, correct, or remove a tracking step for one delivery |
+| **Add Courier** | [http://localhost:8080/deliveries/couriers/new](http://localhost:8080/deliveries/couriers/new) | Add a courier name, phone, vehicle, plate, and rating |
+| **Payment Auditing** | [http://localhost:8080/payments/1](http://localhost:8080/payments/1) | View a payment, update its status or card authorization, or request a refund |
 
 ---
 
-## 🗄️ Database Options & SSMS (SQL Server Management Studio)
+## JSON data file
 
-The system supports both Microsoft SQL Server (managed in SSMS) and in-memory H2.
-
-### 🔷 Option 1: Microsoft SQL Server & SSMS (Active Database)
-The database **`food_delivery_db`** is pre-created and populated with authentic Sri Lankan records in your local Microsoft SQL Server (`localhost\SQLEXPRESS`).
-
-1. **Connect via SQL Server Management Studio (SSMS)**:
-   - **Server Type**: Database Engine
-   - **Server Name**: `localhost\SQLEXPRESS` (or `.` / `localhost`)
-   - **Authentication**: **Windows Authentication** (or **SQL Server Authentication** with `sa` / `Password123!`)
-   - **Database**: Expand **Databases** &rarr; Select `food_delivery_db`
-2. **Execute T-SQL Master Setup Script in SSMS**:
-   - File path: [`src/main/resources/db/mssql/setup_ssms_food_delivery.sql`](file:///c:/Online%20Food%20Delivery%20Management%20System/src/main/resources/db/mssql/setup_ssms_food_delivery.sql)
-   - Open this `.sql` file in SSMS and press **Execute (F5)** to rebuild or query tables at any time.
-3. **Run Application with SQL Server**:
-   In [`src/main/resources/application.properties`](file:///c:/Online%20Food%20Delivery%20Management%20System/src/main/resources/application.properties), set:
-   ```properties
-   spring.profiles.active=sqlserver
-   ```
-
-### 🔶 Option 2: Default Dev Profile (In-Memory H2)
-- **Profile Setting**: `spring.profiles.active=dev`
-- **H2 Web Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-- **JDBC URL**: `jdbc:h2:mem:food_delivery_db`
-- **Username**: `sa` | **Password**: *(leave blank)*
+Orders, customers, food, deliveries, and payments are stored in `data/food-delivery-data.json` (created beside the project when the app starts). Dummy Sri Lankan records are written only when that file has no food items. Edits in the app are saved back to the same file and survive a restart. Backups are `data/food-delivery-data.json.bak` and `data/backups/`. No database, H2 console, or SQL Server profile is required.
 
 ---
 

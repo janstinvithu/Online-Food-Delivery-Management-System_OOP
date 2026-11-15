@@ -79,6 +79,15 @@
 
 <main class="container">
 
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Order updated.</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">Order could not be changed.</span>
+    </div>
+
     <!-- Flash notification when new order created -->
     <div th:if="${createdOrderNumber != null}" class="alert-success" style="margin-bottom: 1.5rem;">
         <span>✓</span>
@@ -229,6 +238,10 @@
                     <span style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary);">Total Paid / Payable</span>
                     <span style="font-weight: 800; font-size: 1.3rem; color: var(--primary);" th:text="${@currency.format(ord.totalAmount)}">LKR 2,015.00</span>
                 </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                <a th:href="@{'/orders/my-orders/' + ${ord.id}}" class="btn btn-secondary btn-sm"
+                   th:text="${ord.orderStatus == 'PENDING'} ? 'View / Edit order' : 'View order'">View order</a>
             </div>
         </div>
     </div>

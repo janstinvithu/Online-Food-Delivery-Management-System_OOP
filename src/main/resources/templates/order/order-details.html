@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details &bull; FoodFlow LK</title>
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('foodflow_theme');
+                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+    <link rel="stylesheet" th:href="@{/css/tables.css}">
+    <style>
+        .financial-summary {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            font-size: 0.9rem;
+        }
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar('my-orders')}"></div>
+
+<main class="container">
+    <div class="section-header">
+        <div>
+            <h1 class="hero-title" style="font-size: 1.85rem; margin-bottom: 0.25rem;">
+                Order <span th:text="${order.orderNumber}" style="font-family: var(--font-mono); color: var(--primary);">ORD-20261018-1001</span>
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                Placed <span th:text="${#temporals.format(order.orderDateTime, 'dd MMM yyyy, hh:mm a')}">18 Oct 2026</span>
+                for <span th:text="${order.customer.fullName}">Eleanor Fernando</span>
+            </p>
+        </div>
+        <a th:href="@{/orders/my-orders}" class="btn btn-secondary">&larr; My Orders</a>
+    </div>
+
+    <div th:if="${successMessage != null}" class="alert-success" style="margin-bottom: 1.5rem;">
+        <span>✓</span>
+        <span th:text="${successMessage}">Order updated.</span>
+    </div>
+    <div th:if="${errorMessage != null}" class="alert-error" style="margin-bottom: 1.5rem;">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">This order could not be changed.</span>
+    </div>
+
+    <div class="card-container fade-in" style="padding: 1.75rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem;">
+            <span th:class="'status-pill status-' + ${order.orderStatus}" th:text="${order.orderStatus}">PENDING</span>
+            <div class="td-strong" style="font-size: 1.5rem; color: var(--primary);" th:text="${@currency.format(order.totalAmount)}">LKR 0.00</div>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 0;" th:text="${order.fulfillmentType}">Online delivery</p>
+        <p th:unless="${editable}" style="color: var(--text-muted); margin: 0.75rem 0 0 0;">
+            Items and delivery details can be changed only while the order is still pending, before preparation starts.
+        </p>
+    </div>
+
+    <div th:if="${editable and onlineOrder}" class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.2rem;">Delivery details</h2>
+        <form th:action="@{'/orders/my-orders/' + ${order.id} + '/details'}" method="post">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label class="form-label" for="deliveryAddress">Delivery address</label>
+                    <input id="deliveryAddress" name="deliveryAddress" class="form-control" required minlength="5" maxlength="255"
+                           th:value="${order.deliveryAddress}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deliveryFee">Delivery fee (LKR)</label>
+                    <input id="deliveryFee" name="deliveryFee" type="number" step="0.01" min="0" class="form-control" required
+                           th:value="${order.deliveryFee}">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save delivery details</button>
+        </form>
+        <form th:action="@{'/orders/my-orders/' + ${order.id} + '/note'}" method="post" style="margin-top: 1.25rem;">
+            <div class="form-group">
+                <label class="form-label" for="orderNote">Order note</label>
+                <input id="orderNote" name="note" class="form-control" maxlength="255" required
+                       th:value="${order.specialDeliveryInstructions}"
+                       placeholder="Gate code, floor, or who should receive the order">
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary"
+                        th:text="${order.specialDeliveryInstructions == null or #strings.isEmpty(order.specialDeliveryInstructions)} ? 'Add note' : 'Update note'">Add note</button>
+            </div>
+        </form>
+        <form th:if="${order.specialDeliveryInstructions != null and !#strings.isEmpty(order.specialDeliveryInstructions)}"
+              th:action="@{'/orders/my-orders/' + ${order.id} + '/note/delete'}" method="post" style="margin-top: 0.75rem;"
+              onsubmit="return confirm('Remove this order note?');">
+            <button type="submit" class="btn btn-danger btn-sm">Delete note</button>
+        </form>
+    </div>
+
+    <div th:if="${editable and pickupOrder}" class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.2rem;">Pickup details</h2>
+        <form th:action="@{'/orders/my-orders/' + ${order.id} + '/details'}" method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="pickupTimeSlot">Pickup time slot</label>
+                    <input id="pickupTimeSlot" name="pickupTimeSlot" class="form-control" required
+                           th:value="${order.pickupTimeSlot}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupWindowMinutes">Window (minutes)</label>
+                    <input id="pickupWindowMinutes" name="pickupWindowMinutes" type="number" min="5" class="form-control" required
+                           th:value="${order.pickupWindowMinutes}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="counterNumber">Counter</label>
+                    <input id="counterNumber" name="counterNumber" type="number" min="1" class="form-control" required
+                           th:value="${order.counterNumber}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pickupContactPhone">Contact phone</label>
+                    <input id="pickupContactPhone" name="pickupContactPhone" class="form-control" required
+                           th:value="${order.pickupContactPhone}">
+                </div>
+                <div class="form-group full-width">
+                    <label class="form-checkbox">
+                        <input type="checkbox" name="curbsidePickup" value="true" th:checked="${order.curbsidePickup}">
+                        <span class="form-label" style="margin-bottom: 0;">Curbside pickup</span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save pickup details</button>
+        </form>
+    </div>
+
+    <div class="card-container" style="padding: 1.75rem; margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="font-size: 1.2rem;">Items</h2>
+        <div th:if="${#lists.isEmpty(order.orderItems)}" style="color: var(--text-secondary); margin-bottom: 1rem;">
+            This order has no items yet.
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(order.orderItems)}">
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Unit price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th th:if="${editable}">Change</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${order.orderItems}">
+                    <td class="td-strong" th:text="${item.foodItem.name}">Chicken Dum Biryani</td>
+                    <td th:text="${@currency.format(item.unitPrice)}">LKR 0.00</td>
+                    <td class="td-strong" th:text="${item.quantity}">1</td>
+                    <td class="td-strong" style="color: var(--primary);" th:text="${@currency.format(item.subtotal)}">LKR 0.00</td>
+                    <td th:if="${editable}">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                            <form th:action="@{'/orders/my-orders/' + ${order.id} + '/items/' + ${item.id}}" method="post" style="display: flex; gap: 0.4rem; align-items: center;">
+                                <input type="number" name="quantity" min="1" class="form-control" style="width: 5.5rem;" th:value="${item.quantity}" required>
+                                <button type="submit" class="btn btn-secondary btn-sm">Update</button>
+                            </form>
+                            <form th:action="@{'/orders/my-orders/' + ${order.id} + '/items/' + ${item.id} + '/remove'}" method="post"
+                                  onsubmit="return confirm('Remove this item from the order?');">
+                                <button type="submit" class="btn btn-danger btn-sm" th:disabled="${#lists.size(order.orderItems) == 1}">Remove</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <form th:if="${editable}" th:action="@{'/orders/my-orders/' + ${order.id} + '/items'}" method="post" style="margin-top: 1.25rem;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="foodItemId">Add an available item</label>
+                    <select id="foodItemId" name="foodItemId" class="form-control" required>
+                        <option value="" disabled selected>-- Select dish / beverage --</option>
+                        <option th:each="food : ${foodItems}" th:value="${food.id}"
+                                th:text="${food.name} + ' — ' + ${@currency.format(food.price)}">Biryani</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input id="quantity" name="quantity" type="number" min="1" value="1" class="form-control" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add item</button>
+        </form>
+
+        <div class="financial-summary" style="margin-top: 1.25rem;">
+            <div class="financial-row">
+                <span style="color: var(--text-secondary);">Subtotal</span>
+                <span th:text="${@currency.format(order.subtotalAmount)}">LKR 0.00</span>
+            </div>
+            <div class="financial-row" th:if="${order.discountAmount != null and order.discountAmount.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                <span style="color: var(--accent-emerald);">Loyalty discount</span>
+                <span style="color: var(--accent-emerald);" th:text="'- ' + ${@currency.format(order.discountAmount)}">- LKR 0.00</span>
+            </div>
+            <div class="financial-row" th:if="${onlineOrder}">
+                <span style="color: var(--text-secondary);">Delivery fee</span>
+                <span th:text="${@currency.format(order.deliveryFee)}">LKR 0.00</span>
+            </div>
+            <div class="financial-row" style="border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                <span style="font-weight: 700;">Total</span>
+                <span style="font-weight: 800; color: var(--primary);" th:text="${@currency.format(order.totalAmount)}">LKR 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{order/feedback-panel :: feedback(${order}, ${complaints}, ${review}, ${canComplain}, ${canReview})}"></div>
+
+    <form th:if="${canCancel}" th:action="@{'/orders/my-orders/' + ${order.id} + '/cancel'}" method="post"
+          onsubmit="return confirm('Cancel this order? The record stays in your history and cannot be edited afterwards.');">
+        <button type="submit" class="btn btn-danger">Cancel order</button>
+    </form>
+</main>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
