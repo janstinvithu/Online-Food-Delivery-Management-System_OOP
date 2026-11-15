@@ -2,7 +2,9 @@ package com.fooddelivery.service;
 
 import com.fooddelivery.model.customer.RegisteredCustomer;
 import com.fooddelivery.model.food.MainCourse;
+import com.fooddelivery.model.order.FoodOrder;
 import com.fooddelivery.model.order.OnlineOrder;
+import com.fooddelivery.model.order.OrderSummaryStats;
 import com.fooddelivery.repository.CustomerRepository;
 import com.fooddelivery.repository.FoodItemRepository;
 import com.fooddelivery.repository.FoodOrderRepository;
@@ -144,5 +146,26 @@ public class OrderServiceTest {
         assertTrue(result instanceof OnlineOrder);
         assertEquals("New Colombo Address", ((OnlineOrder) result).getDeliveryAddress());
         assertEquals("Call before arrival", ((OnlineOrder) result).getSpecialDeliveryInstructions());
+    }
+
+    @Test
+    void testGetOrderSummaryStats() {
+        when(foodOrderRepository.count()).thenReturn(10L);
+        when(foodOrderRepository.findActiveOrdersWithDetails()).thenReturn(java.util.List.of());
+        when(foodOrderRepository.countByOrderStatus("DELIVERED")).thenReturn(8L);
+        when(foodOrderRepository.countByOrderStatus("CANCELLED")).thenReturn(2L);
+        when(foodOrderRepository.calculateDeliveredRevenue()).thenReturn(new BigDecimal("25000.00"));
+        when(foodOrderRepository.calculateTotalDiscountsGiven()).thenReturn(new BigDecimal("1500.00"));
+
+        OrderSummaryStats stats = orderService.getOrderSummaryStats();
+
+        assertEquals(10L, stats.getTotalOrders());
+        assertEquals(0L, stats.getActiveOrders());
+        assertEquals(8L, stats.getDeliveredOrders());
+        assertEquals(2L, stats.getCancelledOrders());
+        assertEquals(new BigDecimal("25000.00"), stats.getTotalRevenue());
+        assertEquals(new BigDecimal("1500.00"), stats.getTotalDiscounts());
+        assertEquals(new BigDecimal("3125.00"), stats.getAverageOrderValue());
+        assertEquals(20.0, stats.getCancellationRatePercentage());
     }
 }

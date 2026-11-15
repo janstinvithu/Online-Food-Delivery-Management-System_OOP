@@ -8,6 +8,7 @@ import com.fooddelivery.model.delivery.Payment;
 import com.fooddelivery.model.food.FoodItem;
 import com.fooddelivery.model.order.FoodOrder;
 import com.fooddelivery.model.order.OnlineOrder;
+import com.fooddelivery.model.order.OrderSummaryStats;
 import com.fooddelivery.model.order.PickupOrder;
 import com.fooddelivery.repository.CustomerRepository;
 import com.fooddelivery.repository.FoodItemRepository;
@@ -16,6 +17,7 @@ import com.fooddelivery.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,46 @@ public class OrderService {
 
     public List<FoodOrder> getAllOrders() {
         return foodOrderRepository.findAllWithDetails();
+    }
+
+    public List<FoodOrder> getOrdersByStatus(String status) {
+        if (status == null || status.trim().isEmpty() || "ALL".equalsIgnoreCase(status.trim())) {
+            return getAllOrders();
+        }
+        return foodOrderRepository.findByOrderStatusWithDetails(status.trim());
+    }
+
+    public List<FoodOrder> searchOrders(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllOrders();
+        }
+        return foodOrderRepository.searchOrdersWithDetails(keyword.trim());
+    }
+
+    public List<FoodOrder> getActiveOrders() {
+        return foodOrderRepository.findActiveOrdersWithDetails();
+    }
+
+    public List<FoodOrder> getOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null || endDate == null) {
+            return getAllOrders();
+        }
+        return foodOrderRepository.findOrdersByDateRangeWithDetails(startDate, endDate);
+    }
+
+    public OrderSummaryStats getOrderSummaryStats() {
+        long total = foodOrderRepository.count();
+        long active = foodOrderRepository.findActiveOrdersWithDetails().size();
+        long delivered = foodOrderRepository.countByOrderStatus("DELIVERED");
+        long cancelled = foodOrderRepository.countByOrderStatus("CANCELLED");
+        BigDecimal revenue = foodOrderRepository.calculateDeliveredRevenue();
+        BigDecimal discounts = foodOrderRepository.calculateTotalDiscountsGiven();
+        return new OrderSummaryStats(total, active, delivered, cancelled, revenue, discounts);
+    }
+
+    public long countOrdersByStatus(String status) {
+        if (status == null) return 0;
+        return foodOrderRepository.countByOrderStatus(status.trim().toUpperCase());
     }
 
     public FoodOrder getOrderById(Long id) {
