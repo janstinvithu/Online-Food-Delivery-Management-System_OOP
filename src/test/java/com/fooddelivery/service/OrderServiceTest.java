@@ -85,4 +85,64 @@ public class OrderServiceTest {
         // Net: 2200.00 - 330.00 + 350.00 (delivery fee) = 2220.00
         assertEquals(new BigDecimal("2220.00"), order.getTotalAmount());
     }
+
+    @Test
+    void testAddOrderItemRecalculatesOrderTotals() {
+        OnlineOrder order = new OnlineOrder(platinumCustomer, "Colombo", null, new BigDecimal("350.00"));
+        order.addOrderItem(kottu, 1);
+        when(foodOrderRepository.findByIdWithDetails(5L)).thenReturn(Optional.of(order));
+        when(foodOrderRepository.save(any(FoodOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MainCourse faluda = new MainCourse(
+                "Faluda",
+                "Cold sweet beverage with rose syrup",
+                new BigDecimal("500.00"),
+                5,
+                "Beverage",
+                true,
+                "MILD",
+                "Regular"
+        );
+        when(foodItemRepository.findById(20L)).thenReturn(Optional.of(faluda));
+
+        FoodOrder updated = orderService.addOrderItem(5L, 20L, 2);
+
+        // Subtotal: 2200 + (500 * 2) = 3200.00
+        assertEquals(new BigDecimal("3200.00"), updated.getSubtotalAmount());
+        // Platinum discount: 15% of 3200.00 = 480.00
+        assertEquals(new BigDecimal("480.00"), updated.getDiscountAmount());
+        // Net: 3200 - 480 + 350 = 3070.00
+        assertEquals(new BigDecimal("3070.00"), updated.getTotalAmount());
+    }
+
+    @Test
+    void testCannotAddItemsToDeliveredOrder() {
+        OnlineOrder order = new OnlineOrder(platinumCustomer, "Colombo", null, new BigDecimal("350.00"));
+        order.addOrderItem(kottu, 1);
+        order.setOrderStatus("DELIVERED");
+        when(foodOrderRepository.findByIdWithDetails(5L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalStateException.class, () -> orderService.addOrderItem(5L, 10L, 1));
+    }
+
+    @Test
+    void testCannotRemoveLastRemainingItem() {
+        OnlineOrder order = new OnlineOrder(platinumCustomer, "Colombo", null, new BigDecimal("350.00"));
+        order.addOrderItem(kottu, 1);
+        when(foodOrderRepository.findByIdWithDetails(5L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalStateException.class, () -> orderService.removeOrderItem(5L, 1L));
+    }
+
+    @Test
+    void testUpdateOnlineDeliveryDetails() {
+        OnlineOrder order = new OnlineOrder(platinumCustomer, "Original Address", "No notes", new BigDecimal("350.00"));
+        when(foodOrderRepository.findByIdWithDetails(5L)).thenReturn(Optional.of(order));
+        when(foodOrderRepository.save(any(FoodOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FoodOrder result = orderService.updateOnlineDeliveryDetails(5L, "New Colombo Address", "Call before arrival");
+        assertTrue(result instanceof OnlineOrder);
+        assertEquals("New Colombo Address", ((OnlineOrder) result).getDeliveryAddress());
+        assertEquals("Call before arrival", ((OnlineOrder) result).getSpecialDeliveryInstructions());
+    }
 }

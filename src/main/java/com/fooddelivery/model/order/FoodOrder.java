@@ -225,6 +225,17 @@ public abstract class FoodOrder {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive (> 0)");
         }
+
+        // If item already exists in this order, merge quantities
+        for (OrderItem existing : orderItems) {
+            if (existing.getFoodItem() != null && foodItem.getId() != null
+                    && foodItem.getId().equals(existing.getFoodItem().getId())) {
+                existing.setQuantity(existing.getQuantity() + quantity);
+                recalculateTotal();
+                return;
+            }
+        }
+
         OrderItem item = new OrderItem(this, foodItem, quantity);
         this.orderItems.add(item);
         recalculateTotal();
@@ -235,6 +246,36 @@ public abstract class FoodOrder {
             item.setOrder(null);
             recalculateTotal();
         }
+    }
+
+    public boolean removeOrderItemById(Long orderItemId) {
+        if (orderItemId == null) {
+            return false;
+        }
+        for (int i = 0; i < orderItems.size(); i++) {
+            OrderItem current = orderItems.get(i);
+            if (orderItemId.equals(current.getId())) {
+                current.setOrder(null);
+                orderItems.remove(i);
+                recalculateTotal();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean updateItemQuantity(Long orderItemId, int newQuantity) {
+        if (orderItemId == null || newQuantity <= 0) {
+            throw new IllegalArgumentException("Invalid order item id or non-positive quantity");
+        }
+        for (OrderItem current : orderItems) {
+            if (orderItemId.equals(current.getId())) {
+                current.setQuantity(newQuantity);
+                recalculateTotal();
+                return true;
+            }
+        }
+        return false;
     }
 
     public void recalculateTotal() {

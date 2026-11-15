@@ -114,6 +114,64 @@ public class OrderService {
     }
 
     @Transactional
+    public FoodOrder addOrderItem(Long orderId, Long foodItemId, int quantity) {
+        FoodOrder order = getOrderById(orderId);
+        if (order.isTerminal()) {
+            throw new IllegalStateException("Cannot add items to an order in terminal state (" + order.getOrderStatus() + ")");
+        }
+        FoodItem foodItem = foodItemRepository.findById(foodItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("FoodItem", "id", foodItemId));
+        order.addOrderItem(foodItem, quantity);
+        return foodOrderRepository.save(order);
+    }
+
+    @Transactional
+    public FoodOrder updateOrderItemQuantity(Long orderId, Long orderItemId, int newQuantity) {
+        FoodOrder order = getOrderById(orderId);
+        if (order.isTerminal()) {
+            throw new IllegalStateException("Cannot modify items on an order in terminal state (" + order.getOrderStatus() + ")");
+        }
+        if (newQuantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be at least 1");
+        }
+        boolean updated = order.updateItemQuantity(orderItemId, newQuantity);
+        if (!updated) {
+            throw new ResourceNotFoundException("OrderItem", "id", orderItemId);
+        }
+        return foodOrderRepository.save(order);
+    }
+
+    @Transactional
+    public FoodOrder removeOrderItem(Long orderId, Long orderItemId) {
+        FoodOrder order = getOrderById(orderId);
+        if (order.isTerminal()) {
+            throw new IllegalStateException("Cannot modify items on an order in terminal state (" + order.getOrderStatus() + ")");
+        }
+        if (order.getOrderItems().size() <= 1) {
+            throw new IllegalStateException("Cannot remove the last item from an order. Cancel the order instead.");
+        }
+        boolean removed = order.removeOrderItemById(orderItemId);
+        if (!removed) {
+            throw new ResourceNotFoundException("OrderItem", "id", orderItemId);
+        }
+        return foodOrderRepository.save(order);
+    }
+
+    @Transactional
+    public FoodOrder updateOnlineDeliveryDetails(Long orderId, String address, String instructions) {
+        FoodOrder order = getOrderById(orderId);
+        if (!(order instanceof OnlineOrder onlineOrder)) {
+            throw new IllegalArgumentException("Order " + orderId + " is not an online delivery order.");
+        }
+        if (order.isTerminal()) {
+            throw new IllegalStateException("Cannot update delivery address on completed or cancelled order.");
+        }
+        onlineOrder.setDeliveryAddress(address);
+        onlineOrder.setSpecialDeliveryInstructions(instructions);
+        return foodOrderRepository.save(onlineOrder);
+    }
+
+    @Transactional
     public Payment attachCashPayment(Long orderId, BigDecimal amountTendered) {
         FoodOrder order = getOrderById(orderId);
         CashPayment cash = new CashPayment(order, order.getTotalAmount(), amountTendered);
