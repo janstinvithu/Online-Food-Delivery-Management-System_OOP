@@ -166,7 +166,7 @@ function animateNumbers() {
 }
 
 // Live Table Synchronized Filter (Combines Filter Chips & Keystroke Search)
-function updateTableFilter(table) {
+function applyTableFilter(table, explicitFilterVal) {
     if (!table) return;
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
@@ -176,26 +176,38 @@ function updateTableFilter(table) {
     const searchInput = tableId ? document.querySelector(`.live-table-search[data-table-target="${tableId}"], [data-table-search][data-table-target="${tableId}"]`) : document.querySelector('.live-table-search, [data-table-search]');
 
     const activeChip = chipContainer ? chipContainer.querySelector('.filter-chip.active') : null;
-    const filterVal = (activeChip ? (activeChip.getAttribute('data-filter') || 'all') : 'all').toLowerCase().trim();
+    const filterVal = (explicitFilterVal !== undefined && explicitFilterVal !== null)
+        ? explicitFilterVal.toLowerCase().trim()
+        : (activeChip ? (activeChip.getAttribute('data-filter') || 'all') : 'all').toLowerCase().trim();
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
     const rows = Array.from(tbody.querySelectorAll('tr:not(.table-empty-state)'));
     let matches = 0;
 
     rows.forEach(row => {
-        // 1. Chip Filter Check
+        // Multi-source stock status detection
+        const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase().trim();
+        const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
+        const stockCellText = stockCell ? stockCell.textContent.toLowerCase().trim() : '';
+
+        const isSoldOut = (stockAttr === 'sold out') || stockCellText.includes('sold out') || stockCellText.includes('soldout');
+        const isInStock = ((stockAttr === 'in stock') || stockCellText.includes('in stock') || stockCellText.includes('instock')) && !isSoldOut;
+
+        // Category detection
+        const catAttr = (row.getAttribute('data-category') || '').toLowerCase().trim();
+
+        // 1. Chip matching
         let chipMatch = false;
         if (filterVal === 'all') {
             chipMatch = true;
         } else if (filterVal === 'in stock') {
-            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-            chipMatch = (stockAttr === 'in stock');
+            chipMatch = isInStock;
         } else if (filterVal === 'sold out') {
-            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-            chipMatch = (stockAttr === 'sold out');
-        } else if (filterVal === 'main course' || filterVal === 'beverage') {
-            const catAttr = (row.getAttribute('data-category') || '').toLowerCase();
-            chipMatch = catAttr.includes(filterVal);
+            chipMatch = isSoldOut;
+        } else if (filterVal === 'main course') {
+            chipMatch = catAttr.includes('main course');
+        } else if (filterVal === 'beverage') {
+            chipMatch = catAttr.includes('beverage');
         } else {
             const clone = row.cloneNode(true);
             const actions = clone.querySelector('.table-actions');
@@ -203,16 +215,14 @@ function updateTableFilter(table) {
             chipMatch = clone.textContent.toLowerCase().includes(filterVal);
         }
 
-        // 2. Search Query Check
+        // 2. Search query matching
         let searchMatch = false;
         if (!query) {
             searchMatch = true;
         } else if (query === 'sold out' || query === 'soldout' || query === 'sold-out' || query === 'unavailable' || query === 'out of stock') {
-            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-            searchMatch = (stockAttr === 'sold out');
+            searchMatch = isSoldOut;
         } else if (query === 'in stock' || query === 'instock' || query === 'in-stock' || query === 'available') {
-            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-            searchMatch = (stockAttr === 'in stock');
+            searchMatch = isInStock;
         } else {
             const clone = row.cloneNode(true);
             const actionsEl = clone.querySelector('.table-actions');
@@ -231,12 +241,12 @@ function updateTableFilter(table) {
         if (!emptyState) {
             emptyState = document.createElement('tr');
             emptyState.className = 'table-empty-state';
-            const colCount = table.querySelectorAll('thead th').length || 6;
+            const colCount = table.querySelectorAll('thead th').length || 7;
             emptyState.innerHTML = `
                 <td colspan="${colCount}" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
                     <strong>No food items found matching current filters</strong>
-                    <div style="font-size: 0.85rem; margin-top: 0.25rem;">Try adjusting search terms or selecting 'All Items'</div>
+                    <div style="font-size: 0.85rem; margin-top: 0.25rem;">Try selecting 'All Items' or clearing your search</div>
                 </td>
             `;
             tbody.appendChild(emptyState);
@@ -251,6 +261,10 @@ function updateTableFilter(table) {
     }
 }
 
+// Global alias for compatibility
+window.applyTableFilter = applyTableFilter;
+window.updateTableFilter = applyTableFilter;
+
 // Live Table Instant Filter
 function initLiveTableFilter() {
     const searchInputs = document.querySelectorAll('.live-table-search, [data-table-search]');
@@ -259,7 +273,7 @@ function initLiveTableFilter() {
         if (!table) return;
 
         input.addEventListener('input', () => {
-            updateTableFilter(table);
+            applyTableFilter(table);
         });
     });
 }
@@ -273,15 +287,19 @@ function initFilterChips() {
         if (!targetTable) return;
 
         chips.forEach(chip => {
-            chip.addEventListener('click', () => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
                 chips.forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
-                updateTableFilter(targetTable);
+                const val = (chip.getAttribute('data-filter') || 'all').toLowerCase().trim();
+                applyTableFilter(targetTable, val);
             });
         });
 
         // Initialize state on load
-        updateTableFilter(targetTable);
+        const activeChip = container.querySelector('.filter-chip.active');
+        const initialVal = activeChip ? activeChip.getAttribute('data-filter') : 'all';
+        applyTableFilter(targetTable, initialVal);
     });
 }
 

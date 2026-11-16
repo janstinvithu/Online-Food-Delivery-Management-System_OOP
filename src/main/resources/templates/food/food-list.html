@@ -73,11 +73,11 @@
 
     <!-- Filter Chips for Food Menu -->
     <div class="filter-chips" data-table-target="#foodMenuTable">
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == null or currentStatusFilter == '' or currentStatusFilter == 'all'} ? 'active' : ''" data-filter="all">All Items</button>
-        <button type="button" class="filter-chip" data-filter="main course">🍛 Main Courses</button>
-        <button type="button" class="filter-chip" data-filter="beverage">🥤 Beverages</button>
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'in_stock' or currentStatusFilter == 'in-stock' or currentStatusFilter == 'available'} ? 'active' : ''" data-filter="in stock">🟢 In Stock</button>
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'sold_out' or currentStatusFilter == 'sold-out' or currentStatusFilter == 'unavailable'} ? 'active' : ''" data-filter="sold out">🔴 Sold Out</button>
+        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == null or currentStatusFilter == '' or currentStatusFilter == 'all'} ? 'active' : ''" data-filter="all" onclick="filterFoodMenu('all', this)">All Items</button>
+        <button type="button" class="filter-chip" data-filter="main course" onclick="filterFoodMenu('main course', this)">🍛 Main Courses</button>
+        <button type="button" class="filter-chip" data-filter="beverage" onclick="filterFoodMenu('beverage', this)">🥤 Beverages</button>
+        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'in_stock' or currentStatusFilter == 'in-stock' or currentStatusFilter == 'available'} ? 'active' : ''" data-filter="in stock" onclick="filterFoodMenu('in stock', this)">🟢 In Stock</button>
+        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'sold_out' or currentStatusFilter == 'sold-out' or currentStatusFilter == 'unavailable'} ? 'active' : ''" data-filter="sold out" onclick="filterFoodMenu('sold out', this)">🔴 Sold Out</button>
     </div>
 
     <div class="card-container">
@@ -96,6 +96,7 @@
                 </thead>
                 <tbody>
                 <tr th:each="item : ${foodItems}"
+                    th:attr="data-stock=${item.available ? 'in stock' : 'sold out'},data-category=${#strings.toLowerCase(item.foodCategory)}"
                     th:data-stock="${item.available ? 'in stock' : 'sold out'}"
                     th:data-category="${#strings.toLowerCase(item.foodCategory)}"
                     th:style="${!item.available ? 'opacity: 0.82; background: rgba(239, 68, 68, 0.03);' : ''}">
@@ -156,6 +157,33 @@
         var panel = document.getElementById('importPanel');
         if (panel) {
             panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+        }
+    }
+
+    function filterFoodMenu(filterVal, chipBtn) {
+        if (chipBtn) {
+            var container = chipBtn.closest('.filter-chips');
+            if (container) {
+                container.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+                chipBtn.classList.add('active');
+            }
+        }
+        var table = document.getElementById('foodMenuTable');
+        if (typeof applyTableFilter === 'function') {
+            applyTableFilter(table, filterVal);
+        } else {
+            if (!table) return;
+            var rows = table.querySelectorAll('tbody tr:not(.table-empty-state)');
+            rows.forEach(function(row) {
+                var stock = (row.getAttribute('data-stock') || '').toLowerCase();
+                var cat = (row.getAttribute('data-category') || '').toLowerCase();
+                var show = true;
+                if (filterVal === 'sold out') show = (stock === 'sold out');
+                else if (filterVal === 'in stock') show = (stock === 'in stock');
+                else if (filterVal === 'main course') show = cat.indexOf('main course') !== -1;
+                else if (filterVal === 'beverage') show = cat.indexOf('beverage') !== -1;
+                row.style.display = show ? '' : 'none';
+            });
         }
     }
 </script>
