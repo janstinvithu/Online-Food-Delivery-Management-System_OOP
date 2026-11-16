@@ -103,7 +103,7 @@
     "name" : "Negombo Lagoon Prawn Curry",
     "description" : "Succulent fresh lagoon prawns slow-cooked in thick coconut milk, roasted curry powder, and wild goraka",
     "price" : 2400.00,
-    "available" : true,
+    "available" : false,
     "preparationTimeMinutes" : 30,
     "cuisineType" : "Coastal Sri Lankan",
     "vegetarian" : false,

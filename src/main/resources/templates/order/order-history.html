@@ -124,7 +124,8 @@
                 <tr th:each="item : ${order.orderItems}">
                     <td class="td-strong" th:text="${item.foodItem.name}">Chicken Dum Biryani Special</td>
                     <td>
-                        <span class="status-pill status-READY" th:text="${item.foodItem.foodCategory}">Main Course</span>
+                        <span class="badge" style="display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 500; background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border-color);" 
+                              th:text="${item.foodItem.foodCategory}">Main Course</span>
                     </td>
                     <td th:text="${@currency.format(item.unitPrice)}">LKR 1,850.00</td>
                     <td class="td-strong" th:text="${item.quantity}">1</td>

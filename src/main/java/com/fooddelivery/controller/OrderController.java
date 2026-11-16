@@ -715,12 +715,20 @@ public class OrderController {
             return "Please select a food dish or beverage to order.";
         }
         for (int i = 0; i < foodItemIds.size(); i++) {
-            if (foodItemIds.get(i) == null) {
+            Long foodId = foodItemIds.get(i);
+            if (foodId == null) {
                 continue;
             }
             Integer qty = (quantities != null && i < quantities.size()) ? quantities.get(i) : 1;
             if (qty == null || qty < 1) {
                 return "Quantity must be at least 1 item.";
+            }
+            try {
+                FoodItem foodItem = foodService.getFoodItemById(foodId);
+                if (!foodItem.isAvailable()) {
+                    return "'" + foodItem.getName() + "' is currently sold out and cannot be ordered.";
+                }
+            } catch (ResourceNotFoundException ignored) {
             }
         }
         return null;

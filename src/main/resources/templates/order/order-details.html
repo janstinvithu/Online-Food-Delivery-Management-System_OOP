@@ -190,7 +190,8 @@
                     <select id="foodItemId" name="foodItemId" class="form-control" required>
                         <option value="" disabled selected>-- Select dish / beverage --</option>
                         <option th:each="food : ${foodItems}" th:value="${food.id}"
-                                th:text="${food.name} + ' — ' + ${@currency.format(food.price)}">Biryani</option>
+                                th:disabled="${!food.available}"
+                                th:text="${food.name} + ' — ' + ${@currency.format(food.price)} + (${food.available} ? '' : ' [SOLD OUT]')">Biryani</option>
                     </select>
                 </div>
                 <div class="form-group">

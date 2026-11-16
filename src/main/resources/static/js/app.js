@@ -165,6 +165,92 @@ function animateNumbers() {
     });
 }
 
+// Live Table Synchronized Filter (Combines Filter Chips & Keystroke Search)
+function updateTableFilter(table) {
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const tableId = table.id ? `#${table.id}` : '';
+    const chipContainer = tableId ? document.querySelector(`.filter-chips[data-table-target="${tableId}"]`) : document.querySelector('.filter-chips');
+    const searchInput = tableId ? document.querySelector(`.live-table-search[data-table-target="${tableId}"], [data-table-search][data-table-target="${tableId}"]`) : document.querySelector('.live-table-search, [data-table-search]');
+
+    const activeChip = chipContainer ? chipContainer.querySelector('.filter-chip.active') : null;
+    const filterVal = (activeChip ? (activeChip.getAttribute('data-filter') || 'all') : 'all').toLowerCase().trim();
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.table-empty-state)'));
+    let matches = 0;
+
+    rows.forEach(row => {
+        // 1. Chip Filter Check
+        let chipMatch = false;
+        if (filterVal === 'all') {
+            chipMatch = true;
+        } else if (filterVal === 'in stock') {
+            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+            chipMatch = (stockAttr === 'in stock');
+        } else if (filterVal === 'sold out') {
+            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+            chipMatch = (stockAttr === 'sold out');
+        } else if (filterVal === 'main course' || filterVal === 'beverage') {
+            const catAttr = (row.getAttribute('data-category') || '').toLowerCase();
+            chipMatch = catAttr.includes(filterVal);
+        } else {
+            const clone = row.cloneNode(true);
+            const actions = clone.querySelector('.table-actions');
+            if (actions) actions.remove();
+            chipMatch = clone.textContent.toLowerCase().includes(filterVal);
+        }
+
+        // 2. Search Query Check
+        let searchMatch = false;
+        if (!query) {
+            searchMatch = true;
+        } else if (query === 'sold out' || query === 'soldout' || query === 'sold-out' || query === 'unavailable' || query === 'out of stock') {
+            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+            searchMatch = (stockAttr === 'sold out');
+        } else if (query === 'in stock' || query === 'instock' || query === 'in-stock' || query === 'available') {
+            const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+            searchMatch = (stockAttr === 'in stock');
+        } else {
+            const clone = row.cloneNode(true);
+            const actionsEl = clone.querySelector('.table-actions');
+            if (actionsEl) actionsEl.remove();
+            searchMatch = clone.textContent.toLowerCase().includes(query);
+        }
+
+        const isVisible = chipMatch && searchMatch;
+        row.style.display = isVisible ? '' : 'none';
+        if (isVisible) matches++;
+    });
+
+    // Handle Empty State
+    let emptyState = tbody.querySelector('.table-empty-state');
+    if (matches === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('tr');
+            emptyState.className = 'table-empty-state';
+            const colCount = table.querySelectorAll('thead th').length || 6;
+            emptyState.innerHTML = `
+                <td colspan="${colCount}" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+                    <strong>No food items found matching current filters</strong>
+                    <div style="font-size: 0.85rem; margin-top: 0.25rem;">Try adjusting search terms or selecting 'All Items'</div>
+                </td>
+            `;
+            tbody.appendChild(emptyState);
+        } else {
+            emptyState.style.display = '';
+            emptyState.querySelector('strong').textContent = query
+                ? `No results found for "${query}"`
+                : 'No food items found matching current filters';
+        }
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
 // Live Table Instant Filter
 function initLiveTableFilter() {
     const searchInputs = document.querySelectorAll('.live-table-search, [data-table-search]');
@@ -172,125 +258,30 @@ function initLiveTableFilter() {
         const table = document.querySelector(input.getAttribute('data-table-target') || '.custom-table');
         if (!table) return;
 
-        const tbody = table.querySelector('tbody');
-        if (!tbody) return;
-
-        const rows = Array.from(tbody.querySelectorAll('tr:not(.table-empty-state)'));
-
         input.addEventListener('input', () => {
-            const query = input.value.trim().toLowerCase();
-            let matches = 0;
-
-            rows.forEach(row => {
-                let isMatch = false;
-                if (!query) {
-                    isMatch = true;
-                } else if (query === 'sold out' || query === 'soldout') {
-                    const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-                    if (stockAttr) {
-                        isMatch = (stockAttr === 'sold out');
-                    } else {
-                        const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
-                        isMatch = stockCell ? stockCell.textContent.toLowerCase().includes('sold out') : false;
-                    }
-                } else if (query === 'in stock' || query === 'instock') {
-                    const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-                    if (stockAttr) {
-                        isMatch = (stockAttr === 'in stock');
-                    } else {
-                        const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
-                        isMatch = stockCell ? stockCell.textContent.toLowerCase().includes('in stock') : false;
-                    }
-                } else {
-                    const clone = row.cloneNode(true);
-                    const actionsEl = clone.querySelector('.table-actions');
-                    if (actionsEl) actionsEl.remove();
-                    isMatch = clone.textContent.toLowerCase().includes(query);
-                }
-                row.style.display = isMatch ? '' : 'none';
-                if (isMatch) matches++;
-            });
-
-            // Handle Empty State
-            let emptyState = tbody.querySelector('.table-empty-state');
-            if (matches === 0) {
-                if (!emptyState) {
-                    emptyState = document.createElement('tr');
-                    emptyState.className = 'table-empty-state';
-                    const colCount = table.querySelectorAll('thead th').length || 6;
-                    emptyState.innerHTML = `
-                        <td colspan="${colCount}" style="padding: 2.5rem; text-align: center; color: var(--text-muted);">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
-                            <strong>No results found for "${query}"</strong>
-                            <div style="font-size: 0.85rem; margin-top: 0.25rem;">Try adjusting your search terms</div>
-                        </td>
-                    `;
-                    tbody.appendChild(emptyState);
-                } else {
-                    emptyState.style.display = '';
-                    emptyState.querySelector('strong').textContent = `No results found for "${query}"`;
-                }
-            } else if (emptyState) {
-                emptyState.style.display = 'none';
-            }
+            updateTableFilter(table);
         });
     });
 }
 
-// Filter Chips (e.g. Filter by Main Course vs Beverage)
+// Filter Chips (e.g. Filter by Main Course vs Beverage vs Stock)
 function initFilterChips() {
     const chipContainers = document.querySelectorAll('.filter-chips');
     chipContainers.forEach(container => {
         const chips = container.querySelectorAll('.filter-chip');
         const targetTable = document.querySelector(container.getAttribute('data-table-target') || '.custom-table');
         if (!targetTable) return;
-        const rows = targetTable.querySelectorAll('tbody tr:not(.table-empty-state)');
 
         chips.forEach(chip => {
             chip.addEventListener('click', () => {
                 chips.forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
-
-                const filterVal = (chip.getAttribute('data-filter') || 'all').toLowerCase();
-
-                rows.forEach(row => {
-                    if (filterVal === 'all') {
-                        row.style.display = '';
-                    } else if (filterVal === 'in stock' || filterVal === 'sold out') {
-                        const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
-                        if (stockAttr) {
-                            row.style.display = (stockAttr === filterVal) ? '' : 'none';
-                        } else {
-                            const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
-                            if (stockCell) {
-                                const cellText = stockCell.textContent.toLowerCase().trim();
-                                row.style.display = cellText.includes(filterVal) ? '' : 'none';
-                            } else {
-                                const clone = row.cloneNode(true);
-                                const actions = clone.querySelector('.table-actions');
-                                if (actions) actions.remove();
-                                row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
-                            }
-                        }
-                    } else if (filterVal === 'main course' || filterVal === 'beverage') {
-                        const catAttr = (row.getAttribute('data-category') || '').toLowerCase();
-                        if (catAttr) {
-                            row.style.display = catAttr.includes(filterVal) ? '' : 'none';
-                        } else {
-                            const clone = row.cloneNode(true);
-                            const actions = clone.querySelector('.table-actions');
-                            if (actions) actions.remove();
-                            row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
-                        }
-                    } else {
-                        const clone = row.cloneNode(true);
-                        const actions = clone.querySelector('.table-actions');
-                        if (actions) actions.remove();
-                        row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
-                    }
-                });
+                updateTableFilter(targetTable);
             });
         });
+
+        // Initialize state on load
+        updateTableFilter(targetTable);
     });
 }
 

@@ -1,5 +1,6 @@
 package com.fooddelivery.controller;
 
+import com.fooddelivery.model.food.FoodItem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -156,19 +162,31 @@ public class FoodIntegrationTest {
     @Test
     @DisplayName("Admin can filter food items by sold_out and in_stock status")
     void testListFoodsWithStatusFilter() throws Exception {
-        mockMvc.perform(get("/foods")
+        MvcResult soldOutResult = mockMvc.perform(get("/foods")
                         .param("status", "sold_out")
                         .session(createAdminSession()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("food/food-list"))
-                .andExpect(model().attributeExists("foodItems"));
+                .andExpect(model().attributeExists("foodItems"))
+                .andReturn();
 
-        mockMvc.perform(get("/foods")
+        @SuppressWarnings("unchecked")
+        List<FoodItem> soldOutItems = (List<FoodItem>) soldOutResult.getModelAndView().getModel().get("foodItems");
+        assertNotNull(soldOutItems);
+        assertTrue(soldOutItems.stream().noneMatch(FoodItem::isAvailable), "All items under sold_out filter must be unavailable");
+
+        MvcResult inStockResult = mockMvc.perform(get("/foods")
                         .param("status", "in_stock")
                         .session(createAdminSession()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("food/food-list"))
-                .andExpect(model().attributeExists("foodItems"));
+                .andExpect(model().attributeExists("foodItems"))
+                .andReturn();
+
+        @SuppressWarnings("unchecked")
+        List<FoodItem> inStockItems = (List<FoodItem>) inStockResult.getModelAndView().getModel().get("foodItems");
+        assertNotNull(inStockItems);
+        assertTrue(inStockItems.stream().allMatch(FoodItem::isAvailable), "All items under in_stock filter must be available");
     }
 
     @Test
