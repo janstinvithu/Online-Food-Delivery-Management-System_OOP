@@ -69,6 +69,70 @@
                               maxlength="255" th:text="${foodItem.description}"
                               placeholder="Recipe and ingredient details..."></textarea>
                 </div>
+
+                <!-- Subclass Specific: MainCourse -->
+                <th:block th:if="${foodItem instanceof T(com.fooddelivery.model.food.MainCourse)}">
+                    <div class="form-group">
+                        <label class="form-label" for="editCuisine">Cuisine Type *</label>
+                        <input type="text" id="editCuisine" name="cuisineType" th:value="${foodItem.cuisineType}"
+                               class="form-control" required minlength="2" maxlength="50" placeholder="e.g. Sri Lankan Dum">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editSpice">Spice Level *</label>
+                        <select id="editSpice" name="spiceLevel" class="form-control" required>
+                            <option value="MILD" th:selected="${foodItem.spiceLevel == 'MILD'}">MILD</option>
+                            <option value="MEDIUM" th:selected="${foodItem.spiceLevel == 'MEDIUM'}">MEDIUM</option>
+                            <option value="HOT" th:selected="${foodItem.spiceLevel == 'HOT'}">HOT</option>
+                            <option value="EXTRA_HOT" th:selected="${foodItem.spiceLevel == 'EXTRA_HOT'}">EXTRA HOT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPortion">Serving Portion *</label>
+                        <input type="text" id="editPortion" name="servingPortion" th:value="${foodItem.servingPortion}"
+                               class="form-control" required minlength="2" maxlength="100" placeholder="e.g. Full Clay Pot">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-checkbox" style="margin-top: 1.8rem;">
+                            <input type="checkbox" name="vegetarian" value="true" th:checked="${foodItem.vegetarian}">
+                            <span class="form-label" style="margin-bottom: 0;">🌱 Vegetarian Dish</span>
+                        </label>
+                    </div>
+                </th:block>
+
+                <!-- Subclass Specific: Beverage -->
+                <th:block th:if="${foodItem instanceof T(com.fooddelivery.model.food.Beverage)}">
+                    <div class="form-group">
+                        <label class="form-label" for="editVolSize">Volume Size Label *</label>
+                        <input type="text" id="editVolSize" name="volumeSize" th:value="${foodItem.volumeSize}"
+                               class="form-control" required minlength="2" maxlength="30" placeholder="e.g. Regular (350ml)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editVolMl">Volume (ml) *</label>
+                        <input type="number" id="editVolMl" name="volumeMl" th:value="${foodItem.volumeMl}"
+                               class="form-control" required min="1" max="5000" placeholder="350">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editSugar">Sugar Level *</label>
+                        <select id="editSugar" name="sugarLevel" class="form-control" required>
+                            <option value="ZERO" th:selected="${foodItem.sugarLevel == 'ZERO'}">ZERO SUGAR</option>
+                            <option value="LOW" th:selected="${foodItem.sugarLevel == 'LOW'}">LOW</option>
+                            <option value="MEDIUM" th:selected="${foodItem.sugarLevel == 'MEDIUM'}">MEDIUM</option>
+                            <option value="HIGH" th:selected="${foodItem.sugarLevel == 'HIGH'}">HIGH</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editCaffeine">Caffeine Content (mg)</label>
+                        <input type="number" id="editCaffeine" name="caffeineContentMg" th:value="${foodItem.caffeineContentMg}"
+                               class="form-control" min="0" max="1000" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-checkbox" style="margin-top: 1.8rem;">
+                            <input type="checkbox" name="cold" value="true" th:checked="${foodItem.cold}">
+                            <span class="form-label" style="margin-bottom: 0;">🧊 Served Cold / Chilled</span>
+                        </label>
+                    </div>
+                </th:block>
+
                 <div class="form-group">
                     <label class="form-checkbox">
                         <input type="checkbox" name="available" th:checked="${foodItem.available}">

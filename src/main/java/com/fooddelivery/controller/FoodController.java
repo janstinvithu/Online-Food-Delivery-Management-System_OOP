@@ -1,15 +1,26 @@
 package com.fooddelivery.controller;
 
+import com.fooddelivery.common.exception.ResourceNotFoundException;
 import com.fooddelivery.model.food.Beverage;
 import com.fooddelivery.model.food.FoodItem;
 import com.fooddelivery.model.food.MainCourse;
 import com.fooddelivery.service.FoodService;
+import com.fooddelivery.util.FoodFileHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Controller
 @RequestMapping("/foods")
@@ -45,6 +56,7 @@ public class FoodController {
     @PostMapping({"/new/main-course", "/add/main-course"})
     public String addMainCourse(@Valid @ModelAttribute("mainCourse") MainCourse mainCourse,
                                 BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes,
                                 Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("beverage", new Beverage());
@@ -53,6 +65,7 @@ public class FoodController {
         }
         try {
             foodService.saveFoodItem(mainCourse);
+            redirectAttributes.addFlashAttribute("successMessage", "Main Course '" + mainCourse.getName() + "' was successfully added.");
             return "redirect:/foods";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -65,6 +78,7 @@ public class FoodController {
     @PostMapping({"/new/beverage", "/add/beverage"})
     public String addBeverage(@Valid @ModelAttribute("beverage") Beverage beverage,
                               BindingResult bindingResult,
+                              RedirectAttributes redirectAttributes,
                               Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("mainCourse", new MainCourse());
@@ -73,6 +87,7 @@ public class FoodController {
         }
         try {
             foodService.saveFoodItem(beverage);
+            redirectAttributes.addFlashAttribute("successMessage", "Beverage '" + beverage.getName() + "' was successfully added.");
             return "redirect:/foods";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
@@ -96,6 +111,16 @@ public class FoodController {
                                  @RequestParam(required = false) BigDecimal price,
                                  @RequestParam(required = false) Integer preparationTimeMinutes,
                                  @RequestParam(defaultValue = "false") boolean available,
+                                 @RequestParam(required = false) String cuisineType,
+                                 @RequestParam(required = false) Boolean vegetarian,
+                                 @RequestParam(required = false) String spiceLevel,
+                                 @RequestParam(required = false) String servingPortion,
+                                 @RequestParam(required = false) String volumeSize,
+                                 @RequestParam(required = false) Integer volumeMl,
+                                 @RequestParam(required = false) Boolean cold,
+                                 @RequestParam(required = false) Integer caffeineContentMg,
+                                 @RequestParam(required = false) String sugarLevel,
+                                 RedirectAttributes redirectAttributes,
                                  Model model) {
         FoodItem item = foodService.getFoodItemById(id);
 
@@ -116,12 +141,10 @@ public class FoodController {
         }
 
         try {
-            item.setName(name);
-            item.setDescription(description);
-            item.setPrice(price);
-            item.setPreparationTimeMinutes(preparationTimeMinutes);
-            item.setAvailable(available);
-            foodService.saveFoodItem(item);
+            foodService.updateFoodItem(id, name, description, price, preparationTimeMinutes, available,
+                    cuisineType, vegetarian, spiceLevel, servingPortion,
+                    volumeSize, volumeMl, cold, caffeineContentMg, sugarLevel);
+            redirectAttributes.addFlashAttribute("successMessage", "Food item '" + name + "' was successfully updated.");
             return "redirect:/foods";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("foodItem", item);
@@ -130,9 +153,68 @@ public class FoodController {
         }
     }
 
+    @PostMapping("/{id}/toggle-availability")
+    public String toggleAvailability(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            FoodItem item = foodService.toggleAvailability(id);
+            String status = item.isAvailable() ? "In Stock" : "Sold Out";
+            redirectAttributes.addFlashAttribute("successMessage", "'" + item.getName() + "' is now marked as " + status + ".");
+        } catch (ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/foods";
+    }
+
     @PostMapping("/delete/{id}")
-    public String deleteFoodItem(@PathVariable Long id) {
-        foodService.deleteFoodItem(id);
+    public String deleteFoodItem(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            FoodItem item = foodService.getFoodItemById(id);
+            foodService.deleteFoodItem(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Food item '" + item.getName() + "' was successfully deleted.");
+        } catch (DataIntegrityViolationException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete this food item because it is associated with existing customer orders. You can mark it as 'Sold Out / Unavailable' instead.");
+        } catch (ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/foods";
+    }
+
+    @GetMapping("/export")
+    public void exportMenuCsv(HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"food_menu_catalog.csv\"");
+        List<FoodItem> items = foodService.getAllFoodItems();
+        FoodFileHandler.exportMenuToCsv(items, response.getWriter());
+    }
+
+    @PostMapping("/import")
+    public String importMenuCsv(@RequestParam(value = "file", required = false) MultipartFile file,
+                                @RequestParam(value = "csvText", required = false) String csvText,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            List<FoodItem> items;
+            if (file != null && !file.isEmpty()) {
+                try (InputStreamReader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
+                    items = FoodFileHandler.loadMenuFromCsv(reader);
+                }
+            } else if (csvText != null && !csvText.trim().isEmpty()) {
+                items = FoodFileHandler.loadMenuFromString(csvText);
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Please provide a valid CSV file or paste CSV content.");
+                return "redirect:/foods";
+            }
+
+            if (items.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "No valid food items found in the provided CSV.");
+                return "redirect:/foods";
+            }
+
+            List<FoodItem> saved = foodService.importFoodItems(items);
+            redirectAttributes.addFlashAttribute("successMessage", "Successfully imported " + saved.size() + " food item(s) into the menu.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to import CSV: " + ex.getMessage());
+        }
         return "redirect:/foods";
     }
 }
