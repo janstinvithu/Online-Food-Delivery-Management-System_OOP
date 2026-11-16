@@ -2,7 +2,7 @@
   "schemaVersion" : 1,
   "sequences" : {
     "customerId" : 5,
-    "foodItemId" : 7,
+    "foodItemId" : 9,
     "orderId" : 10,
     "orderItemId" : 15,
     "deliveryId" : 7,
@@ -78,7 +78,7 @@
     "type" : "MAIN_COURSE",
     "name" : "Chicken Dum Biryani Special",
     "description" : "Fragrant kaima basmati rice steamed with marinated chicken leg, boiled egg, mint sambol, and raita",
-    "price" : 1850.00,
+    "price" : 1900.00,
     "available" : true,
     "preparationTimeMinutes" : 25,
     "cuisineType" : "Sri Lankan Dum",
@@ -160,6 +160,18 @@
     "cold" : true,
     "caffeineContentMg" : 0,
     "sugarLevel" : "ZERO"
+  }, {
+    "id" : 8,
+    "type" : "MAIN_COURSE",
+    "name" : "Puttu",
+    "description" : "",
+    "price" : 400,
+    "available" : true,
+    "preparationTimeMinutes" : 6,
+    "cuisineType" : "General",
+    "vegetarian" : false,
+    "spiceLevel" : "HOT",
+    "servingPortion" : "1 Person"
   } ],
   "orders" : [ {
     "id" : 1,

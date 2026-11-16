@@ -103,7 +103,7 @@ public class FileFoodItemRepository implements FoodItemRepository {
 
     @Override
     public long count() {
-        return store.read(data -> data.getFoodItems().size());
+        return store.read(data -> (long) data.getFoodItems().size());
     }
 
     private List<FoodItem> foods() {

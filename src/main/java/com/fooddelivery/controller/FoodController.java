@@ -8,7 +8,6 @@ import com.fooddelivery.service.FoodService;
 import com.fooddelivery.util.FoodFileHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -171,7 +170,7 @@ public class FoodController {
             FoodItem item = foodService.getFoodItemById(id);
             foodService.deleteFoodItem(id);
             redirectAttributes.addFlashAttribute("successMessage", "Food item '" + item.getName() + "' was successfully deleted.");
-        } catch (DataIntegrityViolationException ex) {
+        } catch (IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Cannot delete this food item because it is associated with existing customer orders. You can mark it as 'Sold Out / Unavailable' instead.");
         } catch (ResourceNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

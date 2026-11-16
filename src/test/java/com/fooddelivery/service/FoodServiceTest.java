@@ -83,7 +83,7 @@ public class FoodServiceTest {
 
     @Test
     void testSearchFoodItems() {
-        when(foodItemRepository.searchByNameOrDescription("Biryani")).thenReturn(List.of(biryani));
+        when(foodItemRepository.searchByName("Biryani")).thenReturn(List.of(biryani));
         List<FoodItem> items = foodService.searchFoodItems("Biryani");
         assertEquals(1, items.size());
         assertEquals("Chicken Dum Biryani Special", items.get(0).getName());
@@ -158,7 +158,6 @@ public class FoodServiceTest {
         when(foodItemRepository.findById(1L)).thenReturn(Optional.of(biryani));
         foodService.deleteFoodItem(1L);
         verify(foodItemRepository, times(1)).delete(biryani);
-        verify(foodItemRepository, times(1)).flush();
     }
 
     @Test

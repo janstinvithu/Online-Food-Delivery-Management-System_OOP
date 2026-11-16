@@ -95,22 +95,79 @@ public abstract class FoodOrder {
         return orderStatus;
     }
 
+    public OrderStatus getStatusEnum() {
+        return OrderStatus.fromString(this.orderStatus);
+    }
+
     public void setOrderStatus(String orderStatus) {
         if (orderStatus == null || orderStatus.trim().isEmpty()) {
             throw new IllegalArgumentException("Order status cannot be blank");
         }
-        String upper = orderStatus.trim().toUpperCase();
-        if ("CANCELLED".equals(this.orderStatus) || "DELIVERED".equals(this.orderStatus)) {
+        OrderStatus newStatus = OrderStatus.fromString(orderStatus);
+        if (newStatus.name().equalsIgnoreCase(this.orderStatus)) {
+            return;
+        }
+        if (isTerminal()) {
             throw new IllegalStateException("Order is in a terminal state: " + this.orderStatus);
         }
-        this.orderStatus = upper;
+        if (newStatus == OrderStatus.OUT_FOR_DELIVERY && isPickupOrder()) {
+            throw new IllegalArgumentException("Pickup orders cannot be set to OUT_FOR_DELIVERY. Customers collect orders directly at the counter.");
+        }
+        this.orderStatus = newStatus.name();
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        if (orderStatus == null) {
+            throw new IllegalArgumentException("Order status cannot be null");
+        }
+        setOrderStatus(orderStatus.name());
+    }
+
+    public boolean isTerminal() {
+        return "DELIVERED".equalsIgnoreCase(this.orderStatus) || "CANCELLED".equalsIgnoreCase(this.orderStatus);
+    }
+
+    public boolean isCancellable() {
+        return !isTerminal();
+    }
+
+    public boolean canTransitionTo(OrderStatus target) {
+        OrderStatus current = getStatusEnum();
+        return current != null && current.canTransitionTo(target);
+    }
+
+    public boolean canTransitionTo(String targetStatus) {
+        try {
+            return canTransitionTo(OrderStatus.fromString(targetStatus));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public void cancelOrder() {
-        if ("DELIVERED".equals(this.orderStatus)) {
+        if ("DELIVERED".equalsIgnoreCase(this.orderStatus)) {
             throw new IllegalStateException("Cannot cancel an order that has already been delivered.");
         }
-        this.orderStatus = "CANCELLED";
+        if ("CANCELLED".equalsIgnoreCase(this.orderStatus)) {
+            throw new IllegalStateException("Order is already cancelled.");
+        }
+        this.orderStatus = OrderStatus.CANCELLED.name();
+    }
+
+    public int getTotalItemCount() {
+        int count = 0;
+        for (OrderItem item : orderItems) {
+            count += item.getQuantity();
+        }
+        return count;
+    }
+
+    public boolean isOnlineOrder() {
+        return "ONLINE".equalsIgnoreCase(getFulfillmentType()) || (this instanceof OnlineOrder);
+    }
+
+    public boolean isPickupOrder() {
+        return (this instanceof PickupOrder);
     }
 
     public LocalDateTime getOrderDateTime() {

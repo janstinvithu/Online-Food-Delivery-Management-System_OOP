@@ -104,7 +104,7 @@ public class FileCustomerRepository implements CustomerRepository {
 
     @Override
     public long count() {
-        return store.read(data -> data.getCustomers().size());
+        return store.read(data -> (long) data.getCustomers().size());
     }
 
     private List<Customer> graphCustomers() {
