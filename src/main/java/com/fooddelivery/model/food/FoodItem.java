@@ -50,7 +50,7 @@ public abstract class FoodItem {
         return name;
     }
 
-    public final void setName(String name) {
+    public void setName(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Food name cannot be null or empty");
         }
@@ -61,7 +61,7 @@ public abstract class FoodItem {
         return description;
     }
 
-    public final void setDescription(String description) {
+    public void setDescription(String description) {
         this.description = (description != null) ? description.trim() : null;
     }
 
@@ -69,7 +69,7 @@ public abstract class FoodItem {
         return price;
     }
 
-    public final void setPrice(BigDecimal price) {
+    public void setPrice(BigDecimal price) {
         if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Price must be strictly positive (> 0.00)");
         }
@@ -84,11 +84,15 @@ public abstract class FoodItem {
         this.available = available;
     }
 
+    public void toggleAvailability() {
+        this.available = !this.available;
+    }
+
     public int getPreparationTimeMinutes() {
         return preparationTimeMinutes;
     }
 
-    public final void setPreparationTimeMinutes(int preparationTimeMinutes) {
+    public void setPreparationTimeMinutes(int preparationTimeMinutes) {
         if (preparationTimeMinutes <= 0) {
             throw new IllegalArgumentException("Preparation time must be positive (> 0)");
         }

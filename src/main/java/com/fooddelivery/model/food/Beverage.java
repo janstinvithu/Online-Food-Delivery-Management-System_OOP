@@ -43,7 +43,7 @@ public class Beverage extends FoodItem {
         return volumeSize;
     }
 
-    public final void setVolumeSize(String volumeSize) {
+    public void setVolumeSize(String volumeSize) {
         if (volumeSize == null || volumeSize.trim().isEmpty()) {
             throw new IllegalArgumentException("Volume size cannot be blank");
         }
@@ -54,7 +54,7 @@ public class Beverage extends FoodItem {
         return volumeMl;
     }
 
-    public final void setVolumeMl(int volumeMl) {
+    public void setVolumeMl(int volumeMl) {
         if (volumeMl <= 0) {
             throw new IllegalArgumentException("Volume must be strictly positive");
         }
@@ -65,7 +65,7 @@ public class Beverage extends FoodItem {
         return cold;
     }
 
-    public final void setCold(boolean cold) {
+    public void setCold(boolean cold) {
         this.cold = cold;
     }
 
@@ -73,7 +73,7 @@ public class Beverage extends FoodItem {
         return caffeineContentMg;
     }
 
-    public final void setCaffeineContentMg(int caffeineContentMg) {
+    public void setCaffeineContentMg(int caffeineContentMg) {
         if (caffeineContentMg < 0) {
             throw new IllegalArgumentException("Caffeine content cannot be negative");
         }
@@ -84,7 +84,7 @@ public class Beverage extends FoodItem {
         return sugarLevel;
     }
 
-    public final void setSugarLevel(String sugarLevel) {
+    public void setSugarLevel(String sugarLevel) {
         if (sugarLevel == null || sugarLevel.trim().isEmpty()) {
             throw new IllegalArgumentException("Sugar level cannot be blank");
         }

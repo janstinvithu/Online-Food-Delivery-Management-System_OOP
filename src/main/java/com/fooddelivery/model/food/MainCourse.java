@@ -36,7 +36,7 @@ public class MainCourse extends FoodItem {
         return cuisineType;
     }
 
-    public final void setCuisineType(String cuisineType) {
+    public void setCuisineType(String cuisineType) {
         if (cuisineType == null || cuisineType.trim().isEmpty()) {
             throw new IllegalArgumentException("Cuisine type cannot be blank");
         }
@@ -47,7 +47,7 @@ public class MainCourse extends FoodItem {
         return vegetarian;
     }
 
-    public final void setVegetarian(boolean vegetarian) {
+    public void setVegetarian(boolean vegetarian) {
         this.vegetarian = vegetarian;
     }
 
@@ -55,7 +55,7 @@ public class MainCourse extends FoodItem {
         return spiceLevel;
     }
 
-    public final void setSpiceLevel(String spiceLevel) {
+    public void setSpiceLevel(String spiceLevel) {
         if (spiceLevel == null || spiceLevel.trim().isEmpty()) {
             throw new IllegalArgumentException("Spice level cannot be blank");
         }
@@ -70,7 +70,7 @@ public class MainCourse extends FoodItem {
         return servingPortion;
     }
 
-    public final void setServingPortion(String servingPortion) {
+    public void setServingPortion(String servingPortion) {
         if (servingPortion == null || servingPortion.trim().isEmpty()) {
             throw new IllegalArgumentException("Serving portion cannot be blank");
         }
