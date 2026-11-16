@@ -134,10 +134,11 @@
                 </th:block>
 
                 <div class="form-group">
-                    <label class="form-checkbox">
-                        <input type="checkbox" name="available" th:checked="${foodItem.available}">
-                        <span class="form-label" style="margin-bottom: 0;">🟢 Available / In Stock</span>
-                    </label>
+                    <label class="form-label" for="editAvailable">Stock Status *</label>
+                    <select id="editAvailable" name="available" class="form-control">
+                        <option value="true" th:selected="${foodItem.available}">🟢 In Stock (Available for ordering)</option>
+                        <option value="false" th:selected="${!foodItem.available}">🔴 Sold Out (Unavailable)</option>
+                    </select>
                 </div>
             </div>
             <div class="form-footer">

@@ -91,7 +91,7 @@
     "name" : "Jaffna Spiced Mutton Kottu",
     "description" : "Hand-shredded godamba roti stir-fried with roasted tender mutton, leeks, green chillies, and Jaffna curry gravy",
     "price" : 2250.00,
-    "available" : true,
+    "available" : false,
     "preparationTimeMinutes" : 20,
     "cuisineType" : "Northern Sri Lankan",
     "vegetarian" : false,

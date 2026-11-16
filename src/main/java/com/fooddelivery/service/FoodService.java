@@ -45,6 +45,13 @@ public class FoodService {
         if (keyword == null || keyword.trim().isEmpty()) {
             return getAllFoodItems();
         }
+        String term = keyword.trim().toLowerCase();
+        if ("sold out".equals(term) || "soldout".equals(term) || "unavailable".equals(term)) {
+            return getAllFoodItems().stream().filter(i -> !i.isAvailable()).toList();
+        }
+        if ("in stock".equals(term) || "instock".equals(term) || "available".equals(term)) {
+            return getAllActiveFoodItems();
+        }
         return foodItemRepository.searchByName(keyword.trim());
     }
 

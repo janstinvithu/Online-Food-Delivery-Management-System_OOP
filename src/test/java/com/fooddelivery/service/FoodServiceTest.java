@@ -97,6 +97,23 @@ public class FoodServiceTest {
     }
 
     @Test
+    void testSearchFoodItemsSoldOutAndInStock() {
+        biryani.setAvailable(true);
+        faluda.setAvailable(false);
+        when(foodItemRepository.findAll()).thenReturn(List.of(biryani, faluda));
+        when(foodItemRepository.findByAvailableTrue()).thenReturn(List.of(biryani));
+
+        List<FoodItem> soldOutItems = foodService.searchFoodItems("sold out");
+        assertEquals(1, soldOutItems.size());
+        assertEquals("Royal Faluda", soldOutItems.get(0).getName());
+
+        List<FoodItem> inStockItems = foodService.searchFoodItems("in stock");
+        assertEquals(1, inStockItems.size());
+        assertEquals("Chicken Dum Biryani Special", inStockItems.get(0).getName());
+        faluda.setAvailable(true);
+    }
+
+    @Test
     void testToggleAvailability() {
         assertTrue(biryani.isAvailable());
         when(foodItemRepository.findById(1L)).thenReturn(Optional.of(biryani));

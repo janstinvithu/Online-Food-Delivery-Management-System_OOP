@@ -95,7 +95,10 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="item : ${foodItems}">
+                <tr th:each="item : ${foodItems}"
+                    th:data-stock="${item.available ? 'in stock' : 'sold out'}"
+                    th:data-category="${#strings.toLowerCase(item.foodCategory)}"
+                    th:style="${!item.available ? 'opacity: 0.9;' : ''}">
                     <td class="td-strong" th:text="${item.id}">1</td>
                     <td>
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
@@ -114,9 +117,9 @@
                     <td class="td-strong" style="color: var(--primary);" 
                         th:text="${@currency.format(item.price)}">LKR 1,850.00</td>
                     <td th:text="${item.preparationTimeMinutes} + ' mins'">25 mins</td>
-                    <td>
-                        <span th:if="${item.available}" class="status-pill status-DELIVERED">In Stock</span>
-                        <span th:unless="${item.available}" class="status-pill status-CANCELLED">Sold Out</span>
+                    <td class="stock-status-cell">
+                        <span th:if="${item.available}" class="status-pill status-DELIVERED stock-badge">In Stock</span>
+                        <span th:unless="${item.available}" class="status-pill status-CANCELLED stock-badge" style="background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; font-weight: 600;">Sold Out</span>
                     </td>
                     <td>
                         <div class="table-actions">

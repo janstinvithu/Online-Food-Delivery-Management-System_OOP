@@ -182,8 +182,31 @@ function initLiveTableFilter() {
             let matches = 0;
 
             rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const isMatch = text.includes(query);
+                let isMatch = false;
+                if (!query) {
+                    isMatch = true;
+                } else if (query === 'sold out' || query === 'soldout') {
+                    const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+                    if (stockAttr) {
+                        isMatch = (stockAttr === 'sold out');
+                    } else {
+                        const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
+                        isMatch = stockCell ? stockCell.textContent.toLowerCase().includes('sold out') : false;
+                    }
+                } else if (query === 'in stock' || query === 'instock') {
+                    const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+                    if (stockAttr) {
+                        isMatch = (stockAttr === 'in stock');
+                    } else {
+                        const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
+                        isMatch = stockCell ? stockCell.textContent.toLowerCase().includes('in stock') : false;
+                    }
+                } else {
+                    const clone = row.cloneNode(true);
+                    const actionsEl = clone.querySelector('.table-actions');
+                    if (actionsEl) actionsEl.remove();
+                    isMatch = clone.textContent.toLowerCase().includes(query);
+                }
                 row.style.display = isMatch ? '' : 'none';
                 if (isMatch) matches++;
             });
@@ -233,9 +256,37 @@ function initFilterChips() {
                 rows.forEach(row => {
                     if (filterVal === 'all') {
                         row.style.display = '';
+                    } else if (filterVal === 'in stock' || filterVal === 'sold out') {
+                        const stockAttr = (row.getAttribute('data-stock') || '').toLowerCase();
+                        if (stockAttr) {
+                            row.style.display = (stockAttr === filterVal) ? '' : 'none';
+                        } else {
+                            const stockCell = row.querySelector('.stock-status-cell, .stock-badge');
+                            if (stockCell) {
+                                const cellText = stockCell.textContent.toLowerCase().trim();
+                                row.style.display = cellText.includes(filterVal) ? '' : 'none';
+                            } else {
+                                const clone = row.cloneNode(true);
+                                const actions = clone.querySelector('.table-actions');
+                                if (actions) actions.remove();
+                                row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
+                            }
+                        }
+                    } else if (filterVal === 'main course' || filterVal === 'beverage') {
+                        const catAttr = (row.getAttribute('data-category') || '').toLowerCase();
+                        if (catAttr) {
+                            row.style.display = catAttr.includes(filterVal) ? '' : 'none';
+                        } else {
+                            const clone = row.cloneNode(true);
+                            const actions = clone.querySelector('.table-actions');
+                            if (actions) actions.remove();
+                            row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
+                        }
                     } else {
-                        const rowText = row.textContent.toLowerCase();
-                        row.style.display = rowText.includes(filterVal) ? '' : 'none';
+                        const clone = row.cloneNode(true);
+                        const actions = clone.querySelector('.table-actions');
+                        if (actions) actions.remove();
+                        row.style.display = clone.textContent.toLowerCase().includes(filterVal) ? '' : 'none';
                     }
                 });
             });

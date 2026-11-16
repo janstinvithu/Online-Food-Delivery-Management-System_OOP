@@ -32,9 +32,18 @@ public class FoodController {
     }
 
     @GetMapping
-    public String listFoods(@RequestParam(value = "search", required = false) String search, Model model) {
-        model.addAttribute("foodItems", foodService.searchFoodItems(search));
+    public String listFoods(@RequestParam(value = "search", required = false) String search,
+                            @RequestParam(value = "status", required = false) String status,
+                            Model model) {
+        List<FoodItem> items = foodService.searchFoodItems(search);
+        if ("sold_out".equalsIgnoreCase(status) || "sold-out".equalsIgnoreCase(status) || "soldout".equalsIgnoreCase(status) || "unavailable".equalsIgnoreCase(status)) {
+            items = items.stream().filter(i -> !i.isAvailable()).toList();
+        } else if ("in_stock".equalsIgnoreCase(status) || "in-stock".equalsIgnoreCase(status) || "available".equalsIgnoreCase(status)) {
+            items = items.stream().filter(FoodItem::isAvailable).toList();
+        }
+        model.addAttribute("foodItems", items);
         model.addAttribute("searchQuery", search);
+        model.addAttribute("currentStatusFilter", status);
         return "food/food-list";
     }
 
@@ -152,7 +161,7 @@ public class FoodController {
         }
     }
 
-    @PostMapping("/{id}/toggle-availability")
+    @RequestMapping(value = {"/{id}/toggle-availability", "/toggle-availability/{id}", "/toggle/{id}", "/{id}/toggle"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String toggleAvailability(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             FoodItem item = foodService.toggleAvailability(id);

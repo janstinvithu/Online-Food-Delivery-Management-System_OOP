@@ -137,6 +137,41 @@ public class FoodIntegrationTest {
     }
 
     @Test
+    @DisplayName("Admin can toggle food item availability via GET or alias routes")
+    void testToggleFoodAvailabilityViaGet() throws Exception {
+        mockMvc.perform(get("/foods/1/toggle-availability")
+                        .session(createAdminSession()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/foods"))
+                .andExpect(flash().attributeExists("successMessage"));
+
+        // Toggle back to available
+        mockMvc.perform(get("/foods/1/toggle-availability")
+                        .session(createAdminSession()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/foods"))
+                .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    @Test
+    @DisplayName("Admin can filter food items by sold_out and in_stock status")
+    void testListFoodsWithStatusFilter() throws Exception {
+        mockMvc.perform(get("/foods")
+                        .param("status", "sold_out")
+                        .session(createAdminSession()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("food/food-list"))
+                .andExpect(model().attributeExists("foodItems"));
+
+        mockMvc.perform(get("/foods")
+                        .param("status", "in_stock")
+                        .session(createAdminSession()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("food/food-list"))
+                .andExpect(model().attributeExists("foodItems"));
+    }
+
+    @Test
     @DisplayName("Admin can update an existing food item with subclass fields")
     void testUpdateFoodItem() throws Exception {
         mockMvc.perform(post("/foods/edit/1")
