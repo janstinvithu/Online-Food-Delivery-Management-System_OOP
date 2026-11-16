@@ -73,11 +73,31 @@
 
     <!-- Filter Chips for Food Menu -->
     <div class="filter-chips" data-table-target="#foodMenuTable">
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == null or currentStatusFilter == '' or currentStatusFilter == 'all'} ? 'active' : ''" data-filter="all" onclick="filterFoodMenu('all', this)">All Items</button>
-        <button type="button" class="filter-chip" data-filter="main course" onclick="filterFoodMenu('main course', this)">🍛 Main Courses</button>
-        <button type="button" class="filter-chip" data-filter="beverage" onclick="filterFoodMenu('beverage', this)">🥤 Beverages</button>
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'in_stock' or currentStatusFilter == 'in-stock' or currentStatusFilter == 'available'} ? 'active' : ''" data-filter="in stock" onclick="filterFoodMenu('in stock', this)">🟢 In Stock</button>
-        <button type="button" class="filter-chip" th:classappend="${currentStatusFilter == 'sold_out' or currentStatusFilter == 'sold-out' or currentStatusFilter == 'unavailable'} ? 'active' : ''" data-filter="sold out" onclick="filterFoodMenu('sold out', this)">🔴 Sold Out</button>
+        <a th:href="@{/foods}" 
+           class="filter-chip" 
+           th:classappend="${(currentStatusFilter == null or currentStatusFilter == '' or currentStatusFilter == 'all') and (currentCategoryFilter == null or currentCategoryFilter == '')} ? 'active' : ''" 
+           data-filter="all" 
+           onclick="return filterFoodMenu(event, 'all', this);">All Items</a>
+        <a th:href="@{/foods(category='main_course')}" 
+           class="filter-chip" 
+           th:classappend="${currentCategoryFilter == 'main_course'} ? 'active' : ''" 
+           data-filter="main course" 
+           onclick="return filterFoodMenu(event, 'main course', this);">🍛 Main Courses</a>
+        <a th:href="@{/foods(category='beverage')}" 
+           class="filter-chip" 
+           th:classappend="${currentCategoryFilter == 'beverage'} ? 'active' : ''" 
+           data-filter="beverage" 
+           onclick="return filterFoodMenu(event, 'beverage', this);">🥤 Beverages</a>
+        <a th:href="@{/foods(status='in_stock')}" 
+           class="filter-chip" 
+           th:classappend="${currentStatusFilter == 'in_stock' or currentStatusFilter == 'in-stock' or currentStatusFilter == 'available'} ? 'active' : ''" 
+           data-filter="in stock" 
+           onclick="return filterFoodMenu(event, 'in stock', this);">🟢 In Stock</a>
+        <a th:href="@{/foods(status='sold_out')}" 
+           class="filter-chip" 
+           th:classappend="${currentStatusFilter == 'sold_out' or currentStatusFilter == 'sold-out' or currentStatusFilter == 'unavailable'} ? 'active' : ''" 
+           data-filter="sold out" 
+           onclick="return filterFoodMenu(event, 'sold out', this);">🔴 Sold Out</a>
     </div>
 
     <div class="card-container">
@@ -151,7 +171,7 @@
 
 <div th:replace="~{layout/footer :: footer}"></div>
 
-<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/app.js(v='3.1')}"></script>
 <script>
     function toggleImportPanel() {
         var panel = document.getElementById('importPanel');
@@ -160,32 +180,121 @@
         }
     }
 
-    function filterFoodMenu(filterVal, chipBtn) {
-        if (chipBtn) {
-            var container = chipBtn.closest('.filter-chips');
-            if (container) {
-                container.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-                chipBtn.classList.add('active');
-            }
+    function filterFoodMenu(event, filterVal, chipEl) {
+        if (event && event.preventDefault) {
+            event.preventDefault();
+            if (event.stopPropagation) event.stopPropagation();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
         }
-        var table = document.getElementById('foodMenuTable');
-        if (typeof applyTableFilter === 'function') {
-            applyTableFilter(table, filterVal);
-        } else {
-            if (!table) return;
-            var rows = table.querySelectorAll('tbody tr:not(.table-empty-state)');
-            rows.forEach(function(row) {
-                var stock = (row.getAttribute('data-stock') || '').toLowerCase();
-                var cat = (row.getAttribute('data-category') || '').toLowerCase();
-                var show = true;
-                if (filterVal === 'sold out') show = (stock === 'sold out');
-                else if (filterVal === 'in stock') show = (stock === 'in stock');
-                else if (filterVal === 'main course') show = cat.indexOf('main course') !== -1;
-                else if (filterVal === 'beverage') show = cat.indexOf('beverage') !== -1;
-                row.style.display = show ? '' : 'none';
+
+        // 1. Update chip visuals
+        var chipContainer = document.querySelector('.filter-chips[data-table-target="#foodMenuTable"]') || document.querySelector('.filter-chips');
+        if (chipContainer) {
+            chipContainer.querySelectorAll('.filter-chip').forEach(function(c) {
+                c.classList.remove('active');
             });
         }
+        if (chipEl) {
+            chipEl.classList.add('active');
+            var href = chipEl.getAttribute('href');
+            if (href && window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', href);
+            }
+        }
+
+        var table = document.getElementById('foodMenuTable');
+        if (!table) return false;
+        var tbody = table.querySelector('tbody');
+        if (!tbody) return false;
+
+        var searchInput = document.querySelector('.live-table-search[data-table-target="#foodMenuTable"]') || document.querySelector('.live-table-search');
+        var query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        var selectedFilter = (filterVal || (chipEl ? chipEl.getAttribute('data-filter') : 'all') || 'all').toLowerCase().trim();
+
+        var rows = Array.from(tbody.querySelectorAll('tr:not(.table-empty-state)'));
+        var visibleCount = 0;
+
+        rows.forEach(function(row) {
+            var stockAttr = (row.getAttribute('data-stock') || '').toLowerCase().trim();
+            var stockCell = row.querySelector('.stock-status-cell');
+            var stockCellText = stockCell ? stockCell.textContent.toLowerCase().trim() : '';
+
+            // Accurate stock classification
+            var isSoldOut = (stockAttr === 'sold out') || stockCellText.indexOf('sold out') !== -1;
+            var isInStock = ((stockAttr === 'in stock') || stockCellText.indexOf('in stock') !== -1) && !isSoldOut;
+
+            var catAttr = (row.getAttribute('data-category') || '').toLowerCase().trim();
+
+            // 1. Chip matching
+            var chipMatch = false;
+            if (selectedFilter === 'all') {
+                chipMatch = true;
+            } else if (selectedFilter === 'sold out' || selectedFilter === 'sold_out') {
+                chipMatch = isSoldOut;
+            } else if (selectedFilter === 'in stock' || selectedFilter === 'in_stock') {
+                chipMatch = isInStock;
+            } else if (selectedFilter === 'main course' || selectedFilter === 'main_course') {
+                chipMatch = catAttr.indexOf('main course') !== -1;
+            } else if (selectedFilter === 'beverage' || selectedFilter === 'beverages') {
+                chipMatch = catAttr.indexOf('beverage') !== -1;
+            } else {
+                chipMatch = true;
+            }
+
+            // 2. Search query matching (strip .table-actions so 'Mark Sold Out' button does not match)
+            var searchMatch = false;
+            if (!query) {
+                searchMatch = true;
+            } else if (query === 'sold out' || query === 'soldout' || query === 'unavailable') {
+                searchMatch = isSoldOut;
+            } else if (query === 'in stock' || query === 'instock' || query === 'available') {
+                searchMatch = isInStock;
+            } else {
+                var clone = row.cloneNode(true);
+                var actions = clone.querySelector('.table-actions');
+                if (actions) actions.remove();
+                searchMatch = clone.textContent.toLowerCase().indexOf(query) !== -1;
+            }
+
+            var isVisible = chipMatch && searchMatch;
+            row.style.setProperty('display', isVisible ? '' : 'none', 'important');
+            if (isVisible) visibleCount++;
+        });
+
+        // Handle empty table placeholder
+        var emptyState = tbody.querySelector('.table-empty-state');
+        if (visibleCount === 0) {
+            if (!emptyState) {
+                emptyState = document.createElement('tr');
+                emptyState.className = 'table-empty-state';
+                emptyState.innerHTML = '<td colspan="7" style="padding: 2.5rem; text-align: center; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div><strong>No food items found matching current filters</strong><div style="font-size: 0.85rem; margin-top: 0.25rem;">Try selecting "All Items" or clearing your search query.</div></td>';
+                tbody.appendChild(emptyState);
+            } else {
+                emptyState.style.display = '';
+            }
+        } else if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        return false;
     }
+
+    // Attach keystroke listener to live search for immediate synchronous response
+    document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = document.querySelector('.live-table-search[data-table-target="#foodMenuTable"]') || document.querySelector('.live-table-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var activeChip = document.querySelector('.filter-chips[data-table-target="#foodMenuTable"] .filter-chip.active');
+                var activeFilter = activeChip ? activeChip.getAttribute('data-filter') : 'all';
+                filterFoodMenu(null, activeFilter, activeChip);
+            });
+        }
+        // Run once on load to guarantee table sync with active chip
+        var activeChip = document.querySelector('.filter-chips[data-table-target="#foodMenuTable"] .filter-chip.active');
+        if (activeChip && activeChip.getAttribute('data-filter') !== 'all') {
+            filterFoodMenu(null, activeChip.getAttribute('data-filter'), activeChip);
+        }
+    });
 </script>
 </body>
 </html>

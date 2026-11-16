@@ -34,6 +34,7 @@ public class FoodController {
     @GetMapping
     public String listFoods(@RequestParam(value = "search", required = false) String search,
                             @RequestParam(value = "status", required = false) String status,
+                            @RequestParam(value = "category", required = false) String category,
                             Model model) {
         List<FoodItem> items = foodService.searchFoodItems(search);
         if ("sold_out".equalsIgnoreCase(status) || "sold-out".equalsIgnoreCase(status) || "soldout".equalsIgnoreCase(status) || "unavailable".equalsIgnoreCase(status)) {
@@ -41,9 +42,17 @@ public class FoodController {
         } else if ("in_stock".equalsIgnoreCase(status) || "in-stock".equalsIgnoreCase(status) || "available".equalsIgnoreCase(status)) {
             items = items.stream().filter(FoodItem::isAvailable).toList();
         }
+
+        if ("main_course".equalsIgnoreCase(category) || "main-course".equalsIgnoreCase(category) || "main course".equalsIgnoreCase(category)) {
+            items = items.stream().filter(i -> i instanceof MainCourse).toList();
+        } else if ("beverage".equalsIgnoreCase(category) || "beverages".equalsIgnoreCase(category)) {
+            items = items.stream().filter(i -> i instanceof Beverage).toList();
+        }
+
         model.addAttribute("foodItems", items);
         model.addAttribute("searchQuery", search);
         model.addAttribute("currentStatusFilter", status);
+        model.addAttribute("currentCategoryFilter", category);
         return "food/food-list";
     }
 
@@ -162,13 +171,19 @@ public class FoodController {
     }
 
     @RequestMapping(value = {"/{id}/toggle-availability", "/toggle-availability/{id}", "/toggle/{id}", "/{id}/toggle"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String toggleAvailability(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String toggleAvailability(@PathVariable Long id,
+                                    @RequestHeader(value = "Referer", required = false) String referer,
+                                    RedirectAttributes redirectAttributes) {
         try {
             FoodItem item = foodService.toggleAvailability(id);
             String status = item.isAvailable() ? "In Stock" : "Sold Out";
             redirectAttributes.addFlashAttribute("successMessage", "'" + item.getName() + "' is now marked as " + status + ".");
         } catch (ResourceNotFoundException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        if (referer != null && referer.contains("/foods")) {
+            int idx = referer.indexOf("/foods");
+            return "redirect:" + referer.substring(idx);
         }
         return "redirect:/foods";
     }
